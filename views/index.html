@@ -622,34 +622,36 @@ function makeRunner() {
   var runner = {
     withSuccessHandler: function(fn) { successFn = fn; return runner; },
     withFailureHandler: function(fn) { failureFn = fn; return runner; },
-    getMetadatos:    function() { finish(apiCall('/api/metadatos')); },
+    getMetadatos:    function() { finish(apiCall('/api/finanzas' + qs({ action: 'metadatos' }))); },
     getDashboardData:function(anio, mes, banco, cat, subcat) {
-      finish(apiCall('/api/dashboard' + qs({ anio: anio, mes: mes, banco: banco, cat: cat, subcat: subcat })));
+      finish(apiCall('/api/finanzas' + qs({ action: 'dashboard', anio: anio, mes: mes, banco: banco, cat: cat, subcat: subcat })));
     },
     getMovimientos:  function(filtrosJson) {
-      finish(apiCall('/api/movimientos' + qs(JSON.parse(filtrosJson || '{}'))));
+      var f = JSON.parse(filtrosJson || '{}'); f.action = 'movimientos';
+      finish(apiCall('/api/finanzas' + qs(f)));
     },
-    getExistentes:   function() { finish(apiCall('/api/existentes')); },
-    getPresupuesto:  function() { finish(apiCall('/api/presupuesto')); },
-    limpiarDuplicados:function() { finish(apiCall('/api/limpiar-duplicados', { method: 'POST' })); },
+    getExistentes:   function() { finish(apiCall('/api/finanzas' + qs({ action: 'existentes' }))); },
+    getPresupuesto:  function() { finish(apiCall('/api/finanzas' + qs({ action: 'presupuesto' }))); },
+    limpiarDuplicados:function() { finish(apiCall('/api/finanzas?action=limpiar-duplicados', { method: 'POST' })); },
     importarMovimientos:function(rowsJson, banco) {
-      finish(apiCall('/api/importar', { method: 'POST', body: JSON.stringify({ rows: JSON.parse(rowsJson), banco: banco }) }));
+      finish(apiCall('/api/finanzas?action=importar', { method: 'POST', body: JSON.stringify({ rows: JSON.parse(rowsJson), banco: banco }) }));
     },
     getInversionesDashboard:function(broker) {
-      finish(apiCall('/api/inversiones/dashboard' + qs({ broker: broker })));
+      finish(apiCall('/api/inversiones' + qs({ action: 'dashboard', broker: broker })));
     },
     getInversionesMovimientos:function(filtrosJson) {
-      finish(apiCall('/api/inversiones/movimientos' + qs(JSON.parse(filtrosJson || '{}'))));
+      var f = JSON.parse(filtrosJson || '{}'); f.action = 'movimientos';
+      finish(apiCall('/api/inversiones' + qs(f)));
     },
     getInversionesExistentes:function(broker) {
-      finish(apiCall('/api/inversiones/existentes' + qs({ broker: broker })));
+      finish(apiCall('/api/inversiones' + qs({ action: 'existentes', broker: broker })));
     },
     importarInversiones:function(rowsJson, broker) {
-      finish(apiCall('/api/inversiones/importar', { method: 'POST', body: JSON.stringify({ rows: JSON.parse(rowsJson), broker: broker }) }));
+      finish(apiCall('/api/inversiones?action=importar', { method: 'POST', body: JSON.stringify({ rows: JSON.parse(rowsJson), broker: broker }) }));
     },
-    getInversionesSaldos:function() { finish(apiCall('/api/inversiones/saldos')); },
+    getInversionesSaldos:function() { finish(apiCall('/api/inversiones?action=saldos')); },
     guardarSaldoInversion:function(dataJson) {
-      finish(apiCall('/api/inversiones/saldos', { method: 'POST', body: dataJson }));
+      finish(apiCall('/api/inversiones?action=saldos', { method: 'POST', body: dataJson }));
     },
   };
   return runner;
