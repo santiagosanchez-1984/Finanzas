@@ -6,6 +6,7 @@ node_modules
 *.har
 claude-sheets-*.json
 extractos-cocos/
+portfolio_report_*.csv
 
 .vercel
 .env*

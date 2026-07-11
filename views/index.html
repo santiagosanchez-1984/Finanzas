@@ -462,10 +462,10 @@ tbody td { padding: 8px 12px; border-bottom: 1px solid #edf0f5; white-space: now
 
   <!-- KPIs -->
   <div class="kpi-grid">
-    <div class="kpi-card ing"><div class="kpi-label">Capital invertido</div><div class="kpi-val ing" id="inv-kpi-invertido">–</div><div class="kpi-sub" id="inv-kpi-invertido-sub"></div></div>
+    <div class="kpi-card bal"><div class="kpi-label">Patrimonio actual</div><div class="kpi-val bal-pos" id="inv-kpi-patrimonio">–</div><div class="kpi-sub">Última foto de cartera / saldo cargado</div></div>
+    <div class="kpi-card ing"><div class="kpi-label">Resultado del mes</div><div class="kpi-val ing" id="inv-kpi-resultado-mes">–</div><div class="kpi-sub" id="inv-kpi-resultado-mes-sub"></div></div>
     <div class="kpi-card aho"><div class="kpi-label">Renta / intereses</div><div class="kpi-val aho" id="inv-kpi-renta">–</div><div class="kpi-sub">Cauciones + rendimientos</div></div>
     <div class="kpi-card egr"><div class="kpi-label">Comisiones pagadas</div><div class="kpi-val egr" id="inv-kpi-comisiones">–</div><div class="kpi-sub" id="inv-kpi-mov-sub"></div></div>
-    <div class="kpi-card bal"><div class="kpi-label">Patrimonio actual</div><div class="kpi-val bal-pos" id="inv-kpi-patrimonio">–</div><div class="kpi-sub">Últimos saldos cargados</div></div>
   </div>
 
   <!-- Saldos por broker -->
@@ -516,6 +516,84 @@ tbody td { padding: 8px 12px; border-bottom: 1px solid #edf0f5; white-space: now
   <div class="card" style="margin-bottom:14px">
     <h3>📈 Evolución de saldos</h3>
     <div class="chart-wrap" style="height:280px"><canvas id="chart-inv-evolucion"></canvas></div>
+  </div>
+
+  <!-- Composicion de cartera -->
+  <div class="card" style="margin-bottom:14px">
+    <h3>🧩 Composición de cartera <span id="inv-composicion-fecha" style="font-size:11px;color:#888;font-weight:400"></span></h3>
+    <div class="tabla-scroll tabla-wrap">
+      <table><thead><tr>
+        <th>Broker</th><th>Instrumento</th><th style="text-align:right">Cantidad</th><th style="text-align:right">Total</th><th>Moneda</th><th style="text-align:right">% cartera</th>
+      </tr></thead><tbody id="inv-composicion-body"><tr><td colspan="6" class="no-data">Cargando...</td></tr></tbody></table>
+    </div>
+  </div>
+
+  <!-- Resultado por periodo -->
+  <div class="card" style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+      <h3 style="margin:0">📅 Resultado por período</h3>
+      <div style="display:flex;gap:6px" id="inv-periodo-tabs">
+        <button class="btn btn-blue inv-periodo-btn active" data-periodo="mes" onclick="setInvPeriodo('mes',this)" style="font-size:12px;padding:6px 14px">Mes</button>
+        <button class="btn btn-gray inv-periodo-btn" data-periodo="trimestre" onclick="setInvPeriodo('trimestre',this)" style="font-size:12px;padding:6px 14px">Trimestre</button>
+        <button class="btn btn-gray inv-periodo-btn" data-periodo="semestre" onclick="setInvPeriodo('semestre',this)" style="font-size:12px;padding:6px 14px">Semestre</button>
+        <button class="btn btn-gray inv-periodo-btn" data-periodo="anio" onclick="setInvPeriodo('anio',this)" style="font-size:12px;padding:6px 14px">Año</button>
+      </div>
+    </div>
+    <div class="tabla-scroll tabla-wrap">
+      <table><thead><tr>
+        <th>Broker</th><th>Moneda</th><th>Período</th><th style="text-align:right">Valor de cierre</th><th style="text-align:right">Variación</th><th style="text-align:right">%</th>
+      </tr></thead><tbody id="inv-periodos-body"><tr><td colspan="6" class="no-data">Cargando...</td></tr></tbody></table>
+    </div>
+  </div>
+
+  <!-- Importar tenencias (foto de cartera) -->
+  <div class="card" style="margin-bottom:14px">
+    <h3>📸 Importar foto de cartera (tenencias)</h3>
+    <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:12px;flex-wrap:wrap">
+      <div class="f-item">
+        <label>Fecha de la foto</label>
+        <input type="date" id="ten-fecha">
+      </div>
+      <div class="f-item">
+        <label>Broker</label>
+        <select id="ten-broker">
+          <option>Cocos Capital</option>
+          <option>BullMarket</option>
+          <option>Balanz</option>
+          <option>Banco Galicia</option>
+        </select>
+      </div>
+    </div>
+    <div class="drop-zone" id="dz-tenencias" onclick="document.getElementById('file-tenencias').click()"
+         ondragover="dzOver(event,'dz-tenencias')" ondragleave="dzLeave('dz-tenencias')" ondrop="dzDropTenencias(event)">
+      <div class="dz-icon">📄</div>
+      <div class="dz-title">Subir portfolio_report (CSV)</div>
+      <div class="dz-sub">Hacé clic o arrastrá el archivo aquí — instrumento;cantidad;precio;moneda;total</div>
+      <input type="file" id="file-tenencias" accept=".csv" onchange="procesarArchivoTenencias(this.files[0])">
+    </div>
+    <div id="res-tenencias" class="dz-result"></div>
+
+    <!-- Preview tenencias -->
+    <div id="ten-preview-section" style="display:none;margin-top:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+        <h3 style="margin:0">Preview — <span id="ten-preview-titulo"></span></h3>
+        <div class="import-actions">
+          <span id="ten-preview-count" style="font-size:12px;color:#888"></span>
+          <button class="btn btn-green" id="btn-ten-importar" onclick="confirmarImportTenencias()">
+            <span id="sp-ten-import" class="spinner"></span>
+            <span id="txt-ten-import">✓ Importar</span>
+          </button>
+          <button class="btn btn-gray" onclick="cancelarPreviewTenencias()">✕ Cancelar</button>
+        </div>
+      </div>
+      <div id="msg-ten-import" class="msg"></div>
+      <div class="tabla-scroll tabla-wrap">
+        <table><thead><tr>
+          <th><input type="checkbox" id="ten-chk-all" onchange="toggleAllTenencias(this)" checked></th>
+          <th>Instrumento</th><th>Cantidad</th><th>Precio</th><th>Moneda</th><th>Total</th><th>Estado</th>
+        </tr></thead><tbody id="ten-preview-body"></tbody></table>
+      </div>
+    </div>
   </div>
 
   <!-- Importar Cocos -->
@@ -652,6 +730,12 @@ function makeRunner() {
     getInversionesSaldos:function() { finish(apiCall('/api/inversiones?action=saldos')); },
     guardarSaldoInversion:function(dataJson) {
       finish(apiCall('/api/inversiones?action=saldos', { method: 'POST', body: dataJson }));
+    },
+    getInversionesTenencias:function(broker) {
+      finish(apiCall('/api/inversiones' + qs({ action: 'tenencias', broker: broker })));
+    },
+    importarTenencias:function(rowsJson, broker, fecha) {
+      finish(apiCall('/api/inversiones?action=importar-tenencias', { method: 'POST', body: JSON.stringify({ rows: JSON.parse(rowsJson), broker: broker, fecha: fecha }) }));
     },
   };
   return runner;
@@ -1828,6 +1912,8 @@ function cargarInversiones() {
     .withFailureHandler(function(e){ console.error(e); })
     .getInversionesDashboard(invBrokerActual);
   cargarInvMovimientos();
+  var tenFecha = document.getElementById('ten-fecha');
+  if (tenFecha && !tenFecha.value) tenFecha.value = new Date().toISOString().substring(0, 10);
 }
 
 function renderInvDashboard(json) {
@@ -1835,19 +1921,16 @@ function renderInvDashboard(json) {
   var porBroker = d.porBroker || {};
   var brokers = Object.keys(porBroker);
 
-  var invertido = 0, renta = 0, comisiones = 0, movs = d.totalMovimientos || 0;
+  var renta = 0, comisiones = 0, movs = d.totalMovimientos || 0;
   brokers.forEach(function(b) {
-    invertido += porBroker[b].compras + porBroker[b].cauctionColocada;
     renta     += porBroker[b].renta;
     comisiones+= porBroker[b].comisiones;
   });
-  document.getElementById('inv-kpi-invertido').textContent  = fmtARS(invertido);
-  document.getElementById('inv-kpi-invertido-sub').textContent = brokers.length + ' broker(s)';
   document.getElementById('inv-kpi-renta').textContent      = fmtARS(renta);
   document.getElementById('inv-kpi-comisiones').textContent = fmtARS(comisiones);
   document.getElementById('inv-kpi-mov-sub').textContent    = movs + ' movimientos';
 
-  // Patrimonio actual = suma de ultimos saldos (convertimos USD a bruto, mostramos por separado si hay ambas monedas)
+  // Patrimonio actual = suma de ultimos puntos de cada serie (tenencias o saldo manual, lo que sea mas reciente)
   var patrimonioARS = 0, patrimonioUSD = 0;
   Object.keys(d.ultimoSaldo || {}).forEach(function(k) {
     var s = d.ultimoSaldo[k];
@@ -1857,8 +1940,107 @@ function renderInvDashboard(json) {
   if (patrimonioUSD > 0) patTxt += ' + US$' + Math.round(patrimonioUSD).toLocaleString('es-AR');
   document.getElementById('inv-kpi-patrimonio').textContent = patTxt;
 
+  var rm = calcularResultadoMesActual(d.resultadoPeriodos || {});
+  var rmPartes = [];
+  if (rm.tieneARS) rmPartes.push((rm.cambioARS >= 0 ? '+' : '') + fmtARS(rm.cambioARS));
+  if (rm.tieneUSD) rmPartes.push((rm.cambioUSD >= 0 ? '+' : '') + fmtMonInv(rm.cambioUSD, 'USD'));
+  document.getElementById('inv-kpi-resultado-mes').textContent = rmPartes.length ? rmPartes.join(' / ') : '–';
+  document.getElementById('inv-kpi-resultado-mes-sub').textContent = rm.periodo ? 'período ' + rm.periodo : 'todavía no hay 2 fotos para comparar';
+  document.getElementById('inv-kpi-resultado-mes').style.color = (rm.tieneARS ? rm.cambioARS : rm.cambioUSD) >= 0 ? '#27ae60' : '#e74c3c';
+
   renderInvSaldosCards(d.ultimoSaldo || {});
   renderInvEvolucionChart(d.evolucion || []);
+  renderInvComposicion(d.composicion || []);
+  invResultadoPeriodos = d.resultadoPeriodos || {};
+  renderInvPeriodos();
+}
+
+function calcularResultadoMesActual(resultadoPeriodos) {
+  var porSerie = resultadoPeriodos.mes || {};
+  var cambioARS = 0, cambioUSD = 0, tieneARS = false, tieneUSD = false, periodo = null;
+  Object.keys(porSerie).forEach(function(k) {
+    var arr = porSerie[k];
+    if (!arr || !arr.length) return;
+    var ult = arr[arr.length - 1];
+    if (ult.cambio === null || ult.cambio === undefined) return;
+    var moneda = k.split('|')[1];
+    periodo = ult.periodo;
+    if (moneda === 'USD') { cambioUSD += ult.cambio; tieneUSD = true; }
+    else { cambioARS += ult.cambio; tieneARS = true; }
+  });
+  return { cambioARS: cambioARS, cambioUSD: cambioUSD, tieneARS: tieneARS, tieneUSD: tieneUSD, periodo: periodo };
+}
+
+function renderInvComposicion(composicion) {
+  var el = document.getElementById('inv-composicion-body');
+  var elFecha = document.getElementById('inv-composicion-fecha');
+  if (!composicion || !composicion.length) {
+    el.innerHTML = '<tr><td colspan="6" class="no-data">Todavía no cargaste ninguna foto de cartera. Usá "Importar foto de cartera" más abajo.</td></tr>';
+    elFecha.textContent = '';
+    return;
+  }
+  var fechas = {};
+  composicion.forEach(function(r) { fechas[r.broker + ': ' + r.fecha] = true; });
+  elFecha.textContent = '(' + Object.keys(fechas).join(' · ') + ')';
+
+  var totalesPorMoneda = {};
+  composicion.forEach(function(r) { totalesPorMoneda[r.moneda] = (totalesPorMoneda[r.moneda] || 0) + r.total; });
+
+  var filas = composicion.slice().sort(function(a, b) { return Math.abs(b.total) - Math.abs(a.total); });
+  el.innerHTML = filas.map(function(r) {
+    var totMon = totalesPorMoneda[r.moneda] || 1;
+    var pct = Math.round((r.total / totMon) * 1000) / 10;
+    return '<tr>' +
+      '<td>' + r.broker + '</td>' +
+      '<td style="max-width:280px;overflow:hidden;text-overflow:ellipsis" title="' + r.instrumento + '">' + r.instrumento + '</td>' +
+      '<td style="text-align:right">' + fmtARS(r.cantidad) + '</td>' +
+      '<td style="text-align:right;font-weight:700">' + fmtMonInv(r.total, r.moneda) + '</td>' +
+      '<td>' + r.moneda + '</td>' +
+      '<td style="text-align:right">' + pct + '%</td>' +
+      '</tr>';
+  }).join('');
+}
+
+var invResultadoPeriodos = {};
+var invPeriodoActual = 'mes';
+
+function setInvPeriodo(tipo, btn) {
+  invPeriodoActual = tipo;
+  document.querySelectorAll('.inv-periodo-btn').forEach(function(b) {
+    b.classList.remove('btn-blue'); b.classList.add('btn-gray'); b.classList.remove('active');
+  });
+  btn.classList.remove('btn-gray'); btn.classList.add('btn-blue'); btn.classList.add('active');
+  renderInvPeriodos();
+}
+
+function renderInvPeriodos() {
+  var el = document.getElementById('inv-periodos-body');
+  var porSerie = invResultadoPeriodos[invPeriodoActual] || {};
+  var keys = Object.keys(porSerie);
+  if (!keys.length) {
+    el.innerHTML = '<tr><td colspan="6" class="no-data">Todavía no hay suficientes datos para este período.</td></tr>';
+    return;
+  }
+  var filas = [];
+  keys.forEach(function(k) {
+    var partes = k.split('|'), broker = partes[0], moneda = partes[1];
+    (porSerie[k] || []).slice().reverse().forEach(function(p) {
+      filas.push({ broker: broker, moneda: moneda, periodo: p.periodo, valor: p.valor, cambio: p.cambio, cambioPct: p.cambioPct });
+    });
+  });
+  el.innerHTML = filas.map(function(f) {
+    var color = (f.cambio === null || f.cambio === undefined) ? '#888' : (f.cambio >= 0 ? '#27ae60' : '#e74c3c');
+    var cambioTxt = (f.cambio === null || f.cambio === undefined) ? '–' : (f.cambio >= 0 ? '+' : '') + fmtMonInv(f.cambio, f.moneda);
+    var pctTxt = (f.cambioPct === null || f.cambioPct === undefined) ? '–' : (f.cambioPct >= 0 ? '+' : '') + f.cambioPct + '%';
+    return '<tr>' +
+      '<td>' + f.broker + '</td>' +
+      '<td>' + f.moneda + '</td>' +
+      '<td>' + f.periodo + '</td>' +
+      '<td style="text-align:right">' + fmtMonInv(f.valor, f.moneda) + '</td>' +
+      '<td style="text-align:right;color:' + color + ';font-weight:700">' + cambioTxt + '</td>' +
+      '<td style="text-align:right;color:' + color + '">' + pctTxt + '</td>' +
+      '</tr>';
+  }).join('');
 }
 
 function renderInvSaldosCards(ultimoSaldo) {
@@ -2124,6 +2306,144 @@ function confirmarImportInv() {
       mostrarMsg('msg-inv-import', 'Error: ' + e.message, 'error');
     })
     .importarInversiones(JSON.stringify(seleccionadas), invPreviewBroker);
+}
+
+// ── Importar tenencias (foto de cartera / portfolio_report) ────
+var invTenPreviewRows = [];
+var invTenPreviewBroker = '';
+var invTenFechaSnapshot = '';
+
+function dzDropTenencias(e) {
+  e.preventDefault();
+  dzLeave('dz-tenencias');
+  var file = e.dataTransfer.files[0];
+  if (file) procesarArchivoTenencias(file);
+}
+
+function procesarArchivoTenencias(file) {
+  if (!file) return;
+  var res = document.getElementById('res-tenencias');
+  if (res) res.innerHTML = '<span style="color:#888">Procesando <em>' + file.name + '</em>...</span>';
+
+  var fm = file.name.match(/(\d{4})(\d{2})(\d{2})/);
+  if (fm) document.getElementById('ten-fecha').value = fm[1] + '-' + fm[2] + '-' + fm[3];
+
+  var fr = new FileReader();
+  fr.onload = function(e) {
+    try {
+      var rows = parsearPortfolioReportCSV(e.target.result);
+      if (rows.length === 0) {
+        if (res) res.innerHTML = '<span class="dz-err">⚠️ No se encontraron instrumentos en el archivo.</span>';
+        return;
+      }
+      mostrarPreviewTenencias(rows, document.getElementById('ten-broker').value);
+      if (res) res.innerHTML = '<span class="dz-ok">✓ ' + rows.length + ' instrumentos encontrados.</span>';
+    } catch (err) {
+      if (res) res.innerHTML = '<span class="dz-err">⚠️ Error al leer el archivo: ' + err.message + '</span>';
+    }
+  };
+  fr.readAsText(file, 'utf-8');
+}
+
+function parsearPortfolioReportCSV(text) {
+  var lines = text.split(/\r?\n/).filter(function(l) { return l.trim(); });
+  if (lines.length < 2) return [];
+  return lines.slice(1).map(function(line) {
+    var c = line.split(';');
+    var instrumento = (c[0] || '').trim().replace(/\(\s*\)\s*$/, '').trim();
+    var cantidad = parsearMontoStr(c[1]);
+    var precio   = parsearMontoStr(c[2]);
+    var moneda   = (c[3] || '').trim().toUpperCase();
+    var total    = parsearMontoStr(c[4]);
+    if (!/^[A-Z]{2,4}$/.test(moneda)) moneda = 'ARS';
+    return { instrumento: instrumento, cantidad: cantidad, precio: precio, moneda: moneda, total: total };
+  }).filter(function(r) { return r.instrumento; });
+}
+
+function mostrarPreviewTenencias(rows, broker) {
+  invTenPreviewBroker = broker;
+  var fechaISO = document.getElementById('ten-fecha').value;
+  if (!fechaISO) { alert('Elegí la fecha de la foto de cartera'); return; }
+  var p = fechaISO.split('-');
+  invTenFechaSnapshot = p[2] + '/' + p[1] + '/' + p[0];
+  document.getElementById('ten-preview-titulo').textContent = broker + ' · ' + invTenFechaSnapshot;
+
+  google.script.run
+    .withSuccessHandler(function(json) {
+      var d = JSON.parse(json);
+      var existentes = {};
+      (d.rows || []).forEach(function(r) { existentes[[r.fecha, r.broker, r.instrumento].join('|').toLowerCase()] = true; });
+      invTenPreviewRows = rows.map(function(r) {
+        r.fecha = invTenFechaSnapshot;
+        r.broker = broker;
+        var k = [r.fecha, r.broker, r.instrumento].join('|').toLowerCase();
+        r._dup = !!existentes[k];
+        r._incluir = !r._dup;
+        return r;
+      });
+      renderPreviewTenencias();
+      document.getElementById('ten-preview-section').style.display = '';
+    })
+    .withFailureHandler(function(e) { console.error(e); })
+    .getInversionesTenencias(broker);
+}
+
+function renderPreviewTenencias() {
+  var nuevos = invTenPreviewRows.filter(function(r) { return !r._dup; }).length;
+  document.getElementById('ten-preview-count').textContent = nuevos + ' nuevos / ' + invTenPreviewRows.length + ' total';
+  document.getElementById('ten-preview-body').innerHTML = invTenPreviewRows.map(function(r, i) {
+    return '<tr' + (r._dup ? ' style="opacity:.5"' : '') + '>' +
+      '<td><input type="checkbox" ' + (r._incluir ? 'checked' : '') + ' onchange="invTenPreviewRows[' + i + ']._incluir=this.checked"' + (r._dup ? ' disabled' : '') + '></td>' +
+      '<td style="max-width:280px;overflow:hidden;text-overflow:ellipsis" title="' + r.instrumento + '">' + r.instrumento + '</td>' +
+      '<td style="text-align:right">' + (r.cantidad || '–') + '</td>' +
+      '<td style="text-align:right">' + (r.precio || '–') + '</td>' +
+      '<td>' + r.moneda + '</td>' +
+      '<td style="text-align:right">' + fmtMonInv(r.total, r.moneda) + '</td>' +
+      '<td>' + (r._dup ? '<span class="b-dup">Ya existe</span>' : '<span class="b-new">Nuevo</span>') + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function toggleAllTenencias(chk) {
+  invTenPreviewRows.forEach(function(r) { if (!r._dup) r._incluir = chk.checked; });
+  renderPreviewTenencias();
+}
+
+function cancelarPreviewTenencias() {
+  document.getElementById('ten-preview-section').style.display = 'none';
+  invTenPreviewRows = [];
+}
+
+function confirmarImportTenencias() {
+  var seleccionadas = invTenPreviewRows.filter(function(r) { return r._incluir; });
+  if (seleccionadas.length === 0) { mostrarMsg('msg-ten-import', 'No hay instrumentos seleccionados.', 'error'); return; }
+
+  var btn = document.getElementById('btn-ten-importar');
+  btn.disabled = true;
+  document.getElementById('sp-ten-import').classList.add('show');
+  document.getElementById('txt-ten-import').textContent = 'Importando...';
+
+  google.script.run
+    .withSuccessHandler(function(json) {
+      btn.disabled = false;
+      document.getElementById('sp-ten-import').classList.remove('show');
+      document.getElementById('txt-ten-import').textContent = '✓ Importar';
+      var r = JSON.parse(json);
+      if (r.ok) {
+        mostrarMsg('msg-ten-import', '✓ Se importaron ' + r.importadas + ' instrumentos (' + r.duplicadas + ' ya existían).', 'ok');
+        cancelarPreviewTenencias();
+        cargarInversiones();
+      } else {
+        mostrarMsg('msg-ten-import', 'Error: ' + r.msg, 'error');
+      }
+    })
+    .withFailureHandler(function(e) {
+      btn.disabled = false;
+      document.getElementById('sp-ten-import').classList.remove('show');
+      document.getElementById('txt-ten-import').textContent = '✓ Importar';
+      mostrarMsg('msg-ten-import', 'Error: ' + e.message, 'error');
+    })
+    .importarTenencias(JSON.stringify(seleccionadas), invTenPreviewBroker, invTenFechaSnapshot);
 }
 </script>
 </body>
