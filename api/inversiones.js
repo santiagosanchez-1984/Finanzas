@@ -4,6 +4,7 @@
 const cors = require('../lib/cors');
 const { isAuthenticated } = require('../lib/auth');
 const { getSheetsClient, ensureSheetExists, SHEET_ID } = require('../lib/sheets');
+const { leerUsuarios, buscarPorEmail, tienePermiso } = require('../lib/usuarios');
 const {
   SHEET_MOVIMIENTOS, SHEET_SALDOS, SHEET_TENENCIAS,
   HEADER_MOVIMIENTOS, HEADER_SALDOS, HEADER_TENENCIAS,
@@ -11,14 +12,34 @@ const {
   leerMovimientos, leerSaldos, leerTenencias,
 } = require('../lib/inversiones');
 
+// Todo el modulo de Inversiones cae bajo un unico permiso ("inversiones");
+// las acciones de solo lectura piden nivel lectura, las que escriben datos
+// piden escritura.
+const NIVEL_POR_ACCION = {
+  'dashboard': 'lectura', 'movimientos': 'lectura', 'existentes': 'lectura',
+  'saldos-get': 'lectura', 'tenencias': 'lectura',
+  'importar': 'escritura', 'saldos-post': 'escritura', 'importar-tenencias': 'escritura',
+};
+
 module.exports = async function(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (!isAuthenticated(req)) return res.status(401).json({ error: 'No autenticado' });
+  const email = isAuthenticated(req);
+  if (!email) return res.status(401).json({ error: 'No autenticado' });
 
   const action = (req.query || {}).action;
   try {
     const sheets = getSheetsClient();
+
+    const usuarios = await leerUsuarios(sheets, SHEET_ID);
+    const usuario = buscarPorEmail(usuarios, email);
+    if (!usuario) return res.status(403).json({ error: 'Tu cuenta no tiene acceso a esta aplicación.' });
+    const claveNivel = action === 'saldos' ? (req.method === 'POST' ? 'saldos-post' : 'saldos-get') : action;
+    const nivel = NIVEL_POR_ACCION[claveNivel];
+    if (nivel && !tienePermiso(usuario, 'inversiones', nivel)) {
+      return res.status(403).json({ error: 'No tenés permiso para esta acción.' });
+    }
+
     switch (action) {
       case 'dashboard':   return await accionDashboard(req, res, sheets);
       case 'movimientos': return await accionMovimientos(req, res, sheets);

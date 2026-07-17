@@ -5,19 +5,41 @@
 const cors = require('../lib/cors');
 const { isAuthenticated } = require('../lib/auth');
 const { getSheetsClient, getSheetGid, SHEET_ID } = require('../lib/sheets');
+const { leerUsuarios, buscarPorEmail, tienePermiso } = require('../lib/usuarios');
 const {
   SHEET_REGISTRO, SHEET_PRESUPUESTO, parseMonto, fmtMonto, fechaToMes,
   claveDuplicado, leerTodas,
 } = require('../lib/finanzas');
 
+// Mapeo accion -> { modulo, nivel } para el chequeo de permisos por modulo.
+const PERMISO_POR_ACCION = {
+  'dashboard':          { modulo: 'dashboard',   nivel: 'lectura' },
+  'metadatos':          { modulo: 'dashboard',   nivel: 'lectura' },
+  'movimientos':        { modulo: 'movimientos', nivel: 'lectura' },
+  'presupuesto':        { modulo: 'presupuesto', nivel: 'lectura' },
+  'existentes':         { modulo: 'importar',    nivel: 'lectura' },
+  'importar':           { modulo: 'importar',    nivel: 'escritura' },
+  'limpiar-duplicados': { modulo: 'importar',    nivel: 'escritura' },
+};
+
 module.exports = async function(req, res) {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (!isAuthenticated(req)) return res.status(401).json({ error: 'No autenticado' });
+  const email = isAuthenticated(req);
+  if (!email) return res.status(401).json({ error: 'No autenticado' });
 
   const action = (req.query || {}).action;
   try {
     const sheets = getSheetsClient();
+
+    const usuarios = await leerUsuarios(sheets, SHEET_ID);
+    const usuario = buscarPorEmail(usuarios, email);
+    if (!usuario) return res.status(403).json({ error: 'Tu cuenta no tiene acceso a esta aplicación.' });
+    const permiso = PERMISO_POR_ACCION[action];
+    if (permiso && !tienePermiso(usuario, permiso.modulo, permiso.nivel)) {
+      return res.status(403).json({ error: 'No tenés permiso para esta acción.' });
+    }
+
     switch (action) {
       case 'dashboard':    return await accionDashboard(req, res, sheets);
       case 'movimientos':  return await accionMovimientos(req, res, sheets);

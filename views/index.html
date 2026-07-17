@@ -117,6 +117,31 @@ tbody td { padding: 8px 12px; border-bottom: 1px solid #edf0f5; white-space: now
 .import-preview .b-dup { background: #f8d7da; color: #721c24; font-size: 10px; padding: 1px 6px; border-radius: 8px; }
 .import-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
+/* ── Facturas IVA ── */
+.fac-preview table td input, .fac-preview table td select { width: 100%; padding: 4px 6px; border-radius: 5px; border: 1px solid #d0dce8; font-size: 12px; }
+.fac-preview table td input[type=number] { text-align: right; }
+.fac-preview tr.fac-err { background: #fff5f5; }
+.fac-err-badge { display: inline-block; background: #f8d7da; color: #721c24; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 8px; white-space: normal; max-width: 160px; }
+.fac-ver { font-size: 11px; color: #2980b9; text-decoration: none; font-weight: 700; }
+.fac-ver:hover { text-decoration: underline; }
+.fac-pendientes { font-size: 12px; color: #e67e22; font-weight: 700; margin-top: 8px; }
+
+/* ── Usuarios (admin) ── */
+.usr-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; background: #f8fafc; border: 1.5px solid transparent; }
+.usr-item:hover { background: #eef5ff; }
+.usr-item.selected { border-color: #0A3560; background: #eef5ff; }
+.usr-avatar { width: 32px; height: 32px; border-radius: 50%; background: #0A3560; color: #fff; font-weight: 800; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.usr-item-nombre { font-size: 13px; font-weight: 700; color: #1a2940; }
+.usr-item-email { font-size: 11px; color: #888; }
+.usr-admin-badge { margin-left: auto; background: #FFF3E0; color: #E65100; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 8px; }
+.usr-perm-grid label { font-size: 11px; margin-bottom: 3px; }
+.usr-perm-grid select { width: 100%; padding: 7px 9px; border-radius: 7px; border: 1.5px solid #d0dce8; font-size: 12.5px; }
+
+/* ── Modal editar factura ── */
+.fac-modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(10,20,35,.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+.fac-modal-backdrop.show { display: flex; }
+.fac-modal-card { max-width: 620px; width: 100%; max-height: 88vh; overflow-y: auto; margin: 0; }
+
 /* ── Presupuesto ── */
 .ppto-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
 .ppto-cat  { width: 160px; font-size: 13px; font-weight: 700; flex-shrink: 0; }
@@ -159,17 +184,20 @@ tbody td { padding: 8px 12px; border-bottom: 1px solid #edf0f5; white-space: now
     <h1>Finanzas Personales</h1>
     <p id="header-sub">Cargando...</p>
   </div>
-  <button onclick="cerrarSesion()" style="margin-left:auto;background:rgba(255,255,255,.15);border:none;color:#fff;padding:7px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">Cerrar sesión</button>
+  <div id="header-yo" style="margin-left:auto;text-align:right;font-size:11.5px;opacity:.85"></div>
+  <button onclick="cerrarSesion()" style="margin-left:14px;background:rgba(255,255,255,.15);border:none;color:#fff;padding:7px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">Cerrar sesión</button>
 </header>
 
 <nav style="display:none">
-  <button class="active" onclick="showTab('dashboard')">🏠 Inicio</button>
-  <button onclick="showTab('movimientos')">📋 Movimientos</button>
-  <button onclick="showTab('importar')">📤 Importar</button>
-  <button onclick="showTab('presupuesto')">🎯 Presupuesto</button>
-  <button onclick="showTab('sueldos')">💰 Sueldos</button>
-  <button onclick="showTab('evolucion')">📈 Evolución</button>
-  <button onclick="showTab('inversiones')">📊 Inversiones</button>
+  <button class="active" id="nav-dashboard" onclick="showTab('dashboard')">🏠 Inicio</button>
+  <button id="nav-movimientos" onclick="showTab('movimientos')">📋 Movimientos</button>
+  <button id="nav-importar" onclick="showTab('importar')">📤 Importar</button>
+  <button id="nav-presupuesto" onclick="showTab('presupuesto')">🎯 Presupuesto</button>
+  <button id="nav-sueldos" onclick="showTab('sueldos')">💰 Sueldos</button>
+  <button id="nav-evolucion" onclick="showTab('evolucion')">📈 Evolución</button>
+  <button id="nav-inversiones" onclick="showTab('inversiones')">📊 Inversiones</button>
+  <button id="nav-facturas" onclick="showTab('facturas')">🧾 Facturas IVA</button>
+  <button id="nav-usuarios" onclick="showTab('usuarios')" style="display:none">👤 Usuarios</button>
 </nav>
 
 <main style="display:none">
@@ -659,7 +687,148 @@ tbody td { padding: 8px 12px; border-bottom: 1px solid #edf0f5; white-space: now
 
 </div>
 
+<!-- ═══ FACTURAS IVA ═══ -->
+<div id="tab-facturas" class="tab-content">
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card bal"><div class="kpi-label">Facturas cargadas</div><div class="kpi-val bal-pos" id="fac-kpi-cantidad">–</div><div class="kpi-sub">Total en la hoja</div></div>
+    <div class="kpi-card ing"><div class="kpi-label">Total facturado</div><div class="kpi-val ing" id="fac-kpi-total">–</div><div class="kpi-sub">Suma de todos los comprobantes</div></div>
+    <div class="kpi-card egr"><div class="kpi-label">IVA acumulado</div><div class="kpi-val egr" id="fac-kpi-iva">–</div><div class="kpi-sub">Suma de IVA discriminado</div></div>
+    <div class="kpi-card aho"><div class="kpi-label">Neto acumulado</div><div class="kpi-val aho" id="fac-kpi-neto">–</div><div class="kpi-sub">Suma de importes netos</div></div>
+  </div>
+
+  <!-- Validar nuevas -->
+  <div class="card" style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+      <h3 style="margin:0">🔍 Validar facturas nuevas</h3>
+      <button class="btn btn-primary" id="btn-fac-validar" onclick="validarFacturasNuevas()">
+        <span class="spinner" id="sp-fac-validar"></span>
+        <span id="txt-fac-validar">🔍 Validar facturas nuevas</span>
+      </button>
+    </div>
+    <div style="font-size:12px;color:#888;margin-bottom:6px">Busca en la carpeta de Drive los comprobantes que todavía no se cargaron y analiza sus datos automáticamente con IA.</div>
+    <div id="msg-fac-validar" class="msg"></div>
+    <div id="fac-pendientes" class="fac-pendientes" style="display:none"></div>
+
+    <!-- Preview editable -->
+    <div id="fac-preview-section" class="fac-preview" style="display:none;margin-top:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+        <h3 style="margin:0">Comprobantes detectados</h3>
+        <div class="import-actions">
+          <span id="fac-preview-count" style="font-size:12px;color:#888"></span>
+          <button class="btn btn-green" id="btn-fac-guardar" onclick="confirmarGuardarFacturas()">
+            <span class="spinner" id="sp-fac-guardar"></span>
+            <span id="txt-fac-guardar">💾 Guardar seleccionadas</span>
+          </button>
+          <button class="btn btn-gray" onclick="cancelarPreviewFacturas()">✕ Descartar</button>
+        </div>
+      </div>
+      <div id="msg-fac-guardar" class="msg"></div>
+      <div class="tabla-scroll tabla-wrap">
+        <table><thead><tr>
+          <th><input type="checkbox" id="fac-chk-all" onchange="toggleAllFacturas(this)" checked></th>
+          <th>Archivo</th><th>Fecha</th><th>Proveedor</th><th>CUIT</th><th>Tipo</th><th>Nro. Factura</th>
+          <th style="text-align:right">Neto</th><th style="text-align:right">IVA</th><th style="text-align:right">Imp. Interno</th><th style="text-align:right">IDC</th>
+          <th style="text-align:right">Total</th><th>Moneda</th><th>Detalle</th>
+        </tr></thead><tbody id="fac-preview-body"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Listado guardado -->
+  <div class="card">
+    <h3>📋 Facturas cargadas</h3>
+    <div class="filtros-row">
+      <div class="f-item"><label>Año</label><select id="fac-f-anio" onchange="aplicarFiltrosFacturas()"><option value="">Todos</option></select></div>
+      <div class="f-item"><label>Mes</label><select id="fac-f-mes" onchange="aplicarFiltrosFacturas()"><option value="">Todos</option></select></div>
+      <div class="f-item"><label>Tipo</label><select id="fac-f-tipo" onchange="aplicarFiltrosFacturas()"><option value="">Todos</option></select></div>
+      <div class="f-item"><label>Moneda</label><select id="fac-f-moneda" onchange="aplicarFiltrosFacturas()"><option value="">Todas</option></select></div>
+      <div class="f-item grow"><label>Proveedor / CUIT / Detalle</label><input type="text" id="fac-f-texto" placeholder="Buscar..." oninput="aplicarFiltrosFacturas()"></div>
+      <div class="f-item"><label>&nbsp;</label><button class="btn btn-gray" onclick="limpiarFiltrosFacturas()">✕ Limpiar filtros</button></div>
+    </div>
+    <div id="fac-mov-count" style="font-size:12px;color:#888;margin-bottom:10px"></div>
+    <div class="tabla-scroll tabla-wrap">
+      <table><thead><tr>
+        <th>Ver</th><th>Editar</th><th>Fecha</th><th>Proveedor</th><th>CUIT</th><th>Tipo</th><th>Nro. Factura</th>
+        <th style="text-align:right">Neto</th><th style="text-align:right">IVA</th><th style="text-align:right">Imp. Interno</th><th style="text-align:right">IDC</th>
+        <th style="text-align:right">Total</th><th>Moneda</th><th>Detalle</th>
+      </tr></thead>
+      <tbody id="fac-listado-body"></tbody></table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ USUARIOS (admin) ═══ -->
+<div id="tab-usuarios" class="tab-content">
+  <div class="card">
+    <h3>👤 Usuarios con acceso</h3>
+    <p style="font-size:12.5px;color:#888;margin-bottom:16px">
+      Dale acceso a otras personas con su cuenta de Google y elegí, módulo por módulo, si pueden solo ver o también cargar/editar datos. Los cambios se aplican al instante, sin que la otra persona tenga que volver a iniciar sesión.
+    </p>
+    <button class="btn btn-green" onclick="nuevoUsuario()" style="margin-bottom:14px">➕ Agregar usuario</button>
+    <div style="display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start">
+      <div id="usr-list" style="display:flex;flex-direction:column;gap:6px"><div class="no-data">Cargando...</div></div>
+      <div class="card" id="usr-detail-panel" style="margin:0;background:#f8f9fa">
+        <div id="usr-detail-empty" style="color:#999;font-size:13px">👈 Elegí un usuario de la lista para ver o editar sus permisos, o agregá uno nuevo.</div>
+        <div id="usr-detail-content" style="display:none">
+          <h3 id="usr-detail-titulo">Nuevo usuario</h3>
+          <div class="f-item" style="margin-bottom:10px">
+            <label>Email de Google</label>
+            <input type="email" id="usr-email" placeholder="persona@gmail.com">
+          </div>
+          <div class="f-item" style="margin-bottom:14px">
+            <label>Nombre</label>
+            <input type="text" id="usr-nombre" placeholder="Nombre para mostrar">
+          </div>
+          <div id="usr-perm-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px"></div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <button class="btn btn-primary" onclick="guardarUsuario()">💾 Guardar</button>
+            <button class="btn btn-red" id="usr-btn-eliminar" onclick="eliminarUsuarioActual()" style="display:none">🗑️ Eliminar</button>
+            <button class="btn btn-gray" onclick="cerrarDetalleUsuario()">✕ Cancelar</button>
+          </div>
+          <div id="usr-save-msg" class="msg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </main>
+
+<!-- ═══ MODAL: Editar factura ═══ -->
+<div id="fac-edit-modal" class="fac-modal-backdrop">
+  <div class="card fac-modal-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h3 style="margin:0">✏️ Editar factura</h3>
+      <button class="btn btn-gray" onclick="cerrarEditarFactura()" style="padding:4px 10px">✕</button>
+    </div>
+    <div style="margin-bottom:14px"><a id="fac-edit-ver" target="_blank" class="fac-ver">👁 Ver comprobante original</a></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="f-item"><label>Fecha</label><input type="text" id="fe-fecha" placeholder="dd/mm/aaaa"></div>
+      <div class="f-item"><label>Proveedor</label><input type="text" id="fe-proveedor"></div>
+      <div class="f-item"><label>CUIT</label><input type="text" id="fe-cuit"></div>
+      <div class="f-item"><label>Tipo</label><input type="text" id="fe-tipo" maxlength="2"></div>
+      <div class="f-item"><label>Nro. Factura</label><input type="text" id="fe-numero"></div>
+      <div class="f-item"><label>Moneda</label><select id="fe-moneda"><option>ARS</option><option>USD</option></select></div>
+      <div class="f-item"><label>Neto</label><input type="number" step="0.01" id="fe-neto"></div>
+      <div class="f-item"><label>IVA</label><input type="number" step="0.01" id="fe-iva"></div>
+      <div class="f-item"><label>Imp. Interno</label><input type="number" step="0.01" id="fe-impinterno"></div>
+      <div class="f-item"><label>IDC</label><input type="number" step="0.01" id="fe-idc"></div>
+      <div class="f-item" style="grid-column:1 / -1"><label>Total</label><input type="number" step="0.01" id="fe-total"></div>
+      <div class="f-item" style="grid-column:1 / -1"><label>Detalle</label><input type="text" id="fe-detalle"></div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:18px">
+      <button class="btn btn-primary" onclick="guardarEdicionFactura()">
+        <span class="spinner" id="sp-fac-editar"></span>
+        <span id="txt-fac-editar">💾 Guardar cambios</span>
+      </button>
+      <button class="btn btn-gray" onclick="cerrarEditarFactura()">Cancelar</button>
+    </div>
+    <div id="msg-fac-editar" class="msg"></div>
+  </div>
+</div>
 
 <script>
 // ── Config ────────────────────────────────────────────────────
@@ -737,6 +906,17 @@ function makeRunner() {
     importarTenencias:function(rowsJson, broker, fecha) {
       finish(apiCall('/api/inversiones?action=importar-tenencias', { method: 'POST', body: JSON.stringify({ rows: JSON.parse(rowsJson), broker: broker, fecha: fecha }) }));
     },
+    getFacturasListar:function() { finish(apiCall('/api/facturas?action=listar')); },
+    validarFacturasNuevas:function() { finish(apiCall('/api/facturas?action=validar-nuevas')); },
+    guardarFacturas:function(facturasJson) {
+      finish(apiCall('/api/facturas?action=guardar', { method: 'POST', body: JSON.stringify({ facturas: JSON.parse(facturasJson) }) }));
+    },
+    editarFactura:function(dataJson) { finish(apiCall('/api/facturas?action=editar', { method: 'POST', body: dataJson })); },
+    getYo:function() { finish(apiCall('/api/usuarios?action=me')); },
+    getUsuarios:function() { finish(apiCall('/api/usuarios?action=list')); },
+    agregarUsuario:function(dataJson) { finish(apiCall('/api/usuarios?action=add', { method: 'POST', body: dataJson })); },
+    actualizarUsuario:function(dataJson) { finish(apiCall('/api/usuarios?action=update', { method: 'POST', body: dataJson })); },
+    eliminarUsuario:function(dataJson) { finish(apiCall('/api/usuarios?action=remove', { method: 'POST', body: dataJson })); },
   };
   return runner;
 }
@@ -746,7 +926,7 @@ function cerrarSesion() {
   apiCall('/api/logout', { method: 'POST' }).finally(function() { location.reload(); });
 }
 
-var TABS   = ['dashboard','movimientos','importar','presupuesto','sueldos','evolucion','inversiones'];
+var TABS   = ['dashboard','movimientos','importar','presupuesto','sueldos','evolucion','inversiones','facturas','usuarios'];
 var metaDatos = { meses: [], bancos: [], cats: [], tipos: [] };
 var chartMensual = null, chartCats = null, chartSubcat = null, chartSueldos = null, chartEvolucion = null;
 var sueldosTodos = [], evolucionDatos = [];
@@ -848,22 +1028,101 @@ function categorizarRow(desc) {
   return { tipo: 'EGRESO', categoria: 'Otros Gastos', subcat: 'Otros', medioPago: '' };
 }
 
+// ── Permisos por modulo ──────────────────────────────────────
+var YO = null;
+var MODULOS = ['dashboard', 'movimientos', 'importar', 'presupuesto', 'inversiones', 'facturas'];
+var MODULO_LABEL = {
+  dashboard: 'Inicio', movimientos: 'Movimientos (+ Sueldos y Evolución)', importar: 'Importar',
+  presupuesto: 'Presupuesto', inversiones: 'Inversiones', facturas: 'Facturas IVA',
+};
+// A que modulo pertenece cada pestaña de nav (varias pestañas comparten modulo).
+var MODULO_POR_TAB = {
+  dashboard: 'dashboard', movimientos: 'movimientos', importar: 'importar', presupuesto: 'presupuesto',
+  sueldos: 'movimientos', evolucion: 'movimientos', inversiones: 'inversiones', facturas: 'facturas',
+};
+
+function puede(modulo, nivel) {
+  if (!YO) return false;
+  if (YO.rol === 'admin') return true;
+  var actual = (YO.permisos || {})[modulo] || 'ninguno';
+  if (nivel === 'lectura') return actual === 'lectura' || actual === 'escritura';
+  return actual === 'escritura';
+}
+
+function aplicarPermisosUI() {
+  document.getElementById('header-yo').innerHTML =
+    '<div style="font-weight:700">' + (YO.nombre || YO.email) + '</div>' +
+    '<div>' + YO.email + (YO.rol === 'admin' ? ' · admin' : '') + '</div>';
+
+  var primerTabVisible = null;
+  Object.keys(MODULO_POR_TAB).forEach(function(tab) {
+    var visible = puede(MODULO_POR_TAB[tab], 'lectura');
+    var btn = document.getElementById('nav-' + tab);
+    if (btn) btn.style.display = visible ? '' : 'none';
+    if (visible && !primerTabVisible) primerTabVisible = tab;
+  });
+
+  if (YO.rol === 'admin') document.getElementById('nav-usuarios').style.display = '';
+
+  // Botones de escritura: se ocultan si el usuario solo tiene lectura.
+  if (!puede('importar', 'escritura')) {
+    document.querySelectorAll('#tab-importar .drop-zone').forEach(function(el){ el.style.display = 'none'; });
+  }
+  if (!puede('inversiones', 'escritura')) {
+    var btnSaldo = document.querySelector('#tab-inversiones button[onclick="abrirFormSaldo()"]');
+    if (btnSaldo) btnSaldo.style.display = 'none';
+    document.querySelectorAll('#tab-inversiones .drop-zone').forEach(function(el){ el.style.display = 'none'; });
+  }
+  if (!puede('facturas', 'escritura')) {
+    var btnValidar = document.getElementById('btn-fac-validar');
+    if (btnValidar) btnValidar.style.display = 'none';
+  }
+
+  if (!primerTabVisible && YO.rol !== 'admin') {
+    document.querySelector('main').innerHTML =
+      '<div class="card" style="text-align:center;padding:50px 20px"><div style="font-size:44px;margin-bottom:10px">🔒</div>' +
+      '<h2>Todavía no tenés acceso a ningún módulo</h2><p style="color:#888;max-width:360px;margin:10px auto">' +
+      'Pedile al administrador que te habilite al menos un módulo.</p></div>';
+  }
+
+  return primerTabVisible;
+}
+
+function cargarYo() {
+  return apiCall('/api/usuarios?action=me')
+    .then(function(data) {
+      YO = data;
+      var primerTab = aplicarPermisosUI();
+      return primerTab;
+    })
+    .catch(function(e) {
+      document.querySelector('main').innerHTML =
+        '<div class="card" style="text-align:center;padding:50px 20px"><div style="font-size:44px;margin-bottom:10px">🚫</div>' +
+        '<h2>Sin acceso</h2><p style="color:#888;max-width:360px;margin:10px auto">' + (e.message || 'Tu cuenta no tiene acceso.') + '</p>' +
+        '<button class="btn btn-gray" onclick="cerrarSesion()" style="margin-top:14px">Cerrar sesión</button></div>';
+      throw e;
+    });
+}
+
 // ── Init ─────────────────────────────────────────────────────
 window.onload = function() {
   document.getElementById('app-header').style.display    = '';
   document.querySelector('nav').style.display            = '';
   document.querySelector('main').style.display           = '';
 
-  google.script.run
-    .withSuccessHandler(function(json) {
-      metaDatos = JSON.parse(json);
-      poblarSelects();
-      showTab('dashboard');
-    })
-    .withFailureHandler(function() {
-      showTab('dashboard');
-    })
-    .getMetadatos();
+  cargarYo().then(function(primerTab) {
+    if (!primerTab) return; // sin acceso a ningun modulo: aplicarPermisosUI ya mostro el aviso
+    google.script.run
+      .withSuccessHandler(function(json) {
+        metaDatos = JSON.parse(json);
+        poblarSelects();
+        showTab(primerTab);
+      })
+      .withFailureHandler(function() {
+        showTab(primerTab);
+      })
+      .getMetadatos();
+  }).catch(function(e) { console.error(e); });
 };
 
 function poblarSelects() {
@@ -927,6 +1186,8 @@ function showTab(nombre) {
   if (nombre === 'sueldos')     cargarSueldos();
   if (nombre === 'evolucion')   cargarEvolucion();
   if (nombre === 'inversiones') cargarInversiones();
+  if (nombre === 'facturas')    cargarFacturas();
+  if (nombre === 'usuarios')    cargarUsuarios();
 }
 
 // ── Dashboard ────────────────────────────────────────────────
@@ -2444,6 +2705,461 @@ function confirmarImportTenencias() {
       mostrarMsg('msg-ten-import', 'Error: ' + e.message, 'error');
     })
     .importarTenencias(JSON.stringify(seleccionadas), invTenPreviewBroker, invTenFechaSnapshot);
+}
+
+// ── Facturas IVA ────────────────────────────────────────────
+var facturasPreview = [];
+
+function esc(s) { return String(s == null ? '' : s).replace(/"/g, '&quot;'); }
+
+var FACTURAS_CACHE = [];
+var FAC_MES_NOMBRES = ['', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+function cargarFacturas() {
+  google.script.run
+    .withSuccessHandler(function(json) {
+      FACTURAS_CACHE = (JSON.parse(json).rows) || [];
+      poblarFiltrosFacturas();
+      aplicarFiltrosFacturas();
+    })
+    .withFailureHandler(function(e){ console.error(e); })
+    .getFacturasListar();
+}
+
+function facturaAnioMes(fecha) {
+  var p = String(fecha || '').split('/');
+  if (p.length !== 3) return { anio: '', mes: '' };
+  return { anio: p[2], mes: p[1] };
+}
+
+function poblarFiltrosFacturas() {
+  var anios = {}, meses = {}, tipos = {}, monedas = {};
+  FACTURAS_CACHE.forEach(function(r) {
+    var am = facturaAnioMes(r.fecha);
+    if (am.anio) anios[am.anio] = true;
+    if (am.mes)  meses[am.mes] = true;
+    if (r.tipoFactura) tipos[r.tipoFactura] = true;
+    if (r.moneda) monedas[r.moneda] = true;
+  });
+
+  function llenarSelect(id, valores, formatear) {
+    var sel = document.getElementById(id);
+    var actual = sel.value;
+    var primeraOpcion = sel.options[0].outerHTML;
+    sel.innerHTML = primeraOpcion + valores.sort().map(function(v) {
+      return '<option value="' + v + '">' + (formatear ? formatear(v) : v) + '</option>';
+    }).join('');
+    if (valores.indexOf(actual) >= 0) sel.value = actual;
+  }
+
+  llenarSelect('fac-f-anio', Object.keys(anios));
+  llenarSelect('fac-f-mes', Object.keys(meses), function(m) { return FAC_MES_NOMBRES[parseInt(m, 10)] || m; });
+  llenarSelect('fac-f-tipo', Object.keys(tipos));
+  llenarSelect('fac-f-moneda', Object.keys(monedas));
+}
+
+function aplicarFiltrosFacturas() {
+  var anio   = document.getElementById('fac-f-anio').value;
+  var mes    = document.getElementById('fac-f-mes').value;
+  var tipo   = document.getElementById('fac-f-tipo').value;
+  var moneda = document.getElementById('fac-f-moneda').value;
+  var texto  = document.getElementById('fac-f-texto').value.trim().toLowerCase();
+
+  var rows = FACTURAS_CACHE.filter(function(r) {
+    var am = facturaAnioMes(r.fecha);
+    if (anio && am.anio !== anio) return false;
+    if (mes && am.mes !== mes) return false;
+    if (tipo && r.tipoFactura !== tipo) return false;
+    if (moneda && r.moneda !== moneda) return false;
+    if (texto) {
+      var hay = (r.proveedor + ' ' + r.cuit + ' ' + r.detalle + ' ' + r.numeroFactura).toLowerCase();
+      if (hay.indexOf(texto) === -1) return false;
+    }
+    return true;
+  });
+
+  renderFacturasListado(rows);
+}
+
+function limpiarFiltrosFacturas() {
+  document.getElementById('fac-f-anio').value = '';
+  document.getElementById('fac-f-mes').value = '';
+  document.getElementById('fac-f-tipo').value = '';
+  document.getElementById('fac-f-moneda').value = '';
+  document.getElementById('fac-f-texto').value = '';
+  aplicarFiltrosFacturas();
+}
+
+function renderFacturasListado(rows) {
+  document.getElementById('fac-kpi-cantidad').textContent = rows.length;
+  var totalGen = 0, totalIva = 0, totalNeto = 0;
+  rows.forEach(function(r) { totalGen += r.total || 0; totalIva += r.iva || 0; totalNeto += r.neto || 0; });
+  document.getElementById('fac-kpi-total').textContent = fmtARS(totalGen);
+  document.getElementById('fac-kpi-iva').textContent = fmtARS(totalIva);
+  document.getElementById('fac-kpi-neto').textContent = fmtARS(totalNeto);
+  document.getElementById('fac-mov-count').textContent = rows.length + ' factura' + (rows.length === 1 ? '' : 's') +
+    (rows.length !== FACTURAS_CACHE.length ? ' (de ' + FACTURAS_CACHE.length + ' en total)' : ' cargada' + (rows.length === 1 ? '' : 's'));
+  document.getElementById('fac-listado-body').innerHTML = rows.length ? rows.map(function(r) {
+    return '<tr>' +
+      '<td><a class="fac-ver" target="_blank" href="https://drive.google.com/file/d/' + r.driveFileId + '/view">Ver</a></td>' +
+      '<td><button class="btn btn-gray" style="padding:4px 10px;font-size:11px" onclick=\'abrirEditarFactura("' + r.driveFileId + '")\'>✏️ Editar</button></td>' +
+      '<td>' + (r.fecha || '–') + '</td>' +
+      '<td>' + (r.proveedor || '–') + '</td>' +
+      '<td>' + (r.cuit || '–') + '</td>' +
+      '<td>' + (r.tipoFactura || '–') + '</td>' +
+      '<td>' + (r.numeroFactura || '–') + '</td>' +
+      '<td style="text-align:right">' + fmtMonInv(r.neto, r.moneda) + '</td>' +
+      '<td style="text-align:right">' + fmtMonInv(r.iva, r.moneda) + '</td>' +
+      '<td style="text-align:right">' + (r.impInterno ? fmtMonInv(r.impInterno, r.moneda) : '–') + '</td>' +
+      '<td style="text-align:right">' + (r.idc ? fmtMonInv(r.idc, r.moneda) : '–') + '</td>' +
+      '<td style="text-align:right">' + fmtMonInv(r.total, r.moneda) + '</td>' +
+      '<td>' + r.moneda + '</td>' +
+      '<td title="' + esc(r.detalle) + '">' + (r.detalle || '–') + '</td>' +
+      '</tr>';
+  }).join('') : '<tr><td colspan="14" class="no-data">' + (FACTURAS_CACHE.length ? 'Ninguna factura coincide con los filtros.' : 'Todavía no cargaste ninguna factura. Usá "Validar facturas nuevas" más arriba.') + '</td></tr>';
+}
+
+// ── Modal editar factura ─────────────────────────────────────
+var FAC_EDITANDO = null; // driveFileId de la factura en edicion
+
+function abrirEditarFactura(driveFileId) {
+  var r = FACTURAS_CACHE.find(function(x) { return x.driveFileId === driveFileId; });
+  if (!r) return;
+  FAC_EDITANDO = driveFileId;
+  document.getElementById('fac-edit-ver').href = 'https://drive.google.com/file/d/' + driveFileId + '/view';
+  document.getElementById('fe-fecha').value = r.fecha || '';
+  document.getElementById('fe-proveedor').value = r.proveedor || '';
+  document.getElementById('fe-cuit').value = r.cuit || '';
+  document.getElementById('fe-tipo').value = r.tipoFactura || '';
+  document.getElementById('fe-numero').value = r.numeroFactura || '';
+  document.getElementById('fe-moneda').value = r.moneda || 'ARS';
+  document.getElementById('fe-neto').value = r.neto || 0;
+  document.getElementById('fe-iva').value = r.iva || 0;
+  document.getElementById('fe-impinterno').value = r.impInterno || 0;
+  document.getElementById('fe-idc').value = r.idc || 0;
+  document.getElementById('fe-total').value = r.total || 0;
+  document.getElementById('fe-detalle').value = r.detalle || '';
+  document.getElementById('msg-fac-editar').className = 'msg';
+  document.getElementById('fac-edit-modal').classList.add('show');
+}
+
+function cerrarEditarFactura() {
+  FAC_EDITANDO = null;
+  document.getElementById('fac-edit-modal').classList.remove('show');
+}
+
+function guardarEdicionFactura() {
+  if (!FAC_EDITANDO) return;
+  var datos = {
+    driveFileId:   FAC_EDITANDO,
+    fecha:         document.getElementById('fe-fecha').value.trim(),
+    proveedor:     document.getElementById('fe-proveedor').value.trim(),
+    cuit:          document.getElementById('fe-cuit').value.trim(),
+    tipoFactura:   document.getElementById('fe-tipo').value.trim(),
+    numeroFactura: document.getElementById('fe-numero').value.trim(),
+    moneda:        document.getElementById('fe-moneda').value,
+    neto:          parseFloat(document.getElementById('fe-neto').value) || 0,
+    iva:           parseFloat(document.getElementById('fe-iva').value) || 0,
+    impInterno:    parseFloat(document.getElementById('fe-impinterno').value) || 0,
+    idc:           parseFloat(document.getElementById('fe-idc').value) || 0,
+    total:         parseFloat(document.getElementById('fe-total').value) || 0,
+    detalle:       document.getElementById('fe-detalle').value.trim(),
+  };
+
+  document.getElementById('sp-fac-editar').classList.add('show');
+  document.getElementById('txt-fac-editar').textContent = 'Guardando...';
+  document.getElementById('msg-fac-editar').className = 'msg';
+
+  google.script.run
+    .withSuccessHandler(function(json) {
+      document.getElementById('sp-fac-editar').classList.remove('show');
+      document.getElementById('txt-fac-editar').textContent = '💾 Guardar cambios';
+      var r = JSON.parse(json);
+      if (!r.ok) { mostrarMsg('msg-fac-editar', 'Error: ' + (r.error || r.msg || ''), 'error'); return; }
+      var idx = FACTURAS_CACHE.findIndex(function(x) { return x.driveFileId === FAC_EDITANDO; });
+      if (idx >= 0) Object.assign(FACTURAS_CACHE[idx], datos);
+      cerrarEditarFactura();
+      aplicarFiltrosFacturas();
+    })
+    .withFailureHandler(function(e) {
+      document.getElementById('sp-fac-editar').classList.remove('show');
+      document.getElementById('txt-fac-editar').textContent = '💾 Guardar cambios';
+      mostrarMsg('msg-fac-editar', 'Error: ' + e.message, 'error');
+    })
+    .editarFactura(JSON.stringify(datos));
+}
+
+function validarFacturasNuevas() {
+  var btn = document.getElementById('btn-fac-validar');
+  btn.disabled = true;
+  document.getElementById('sp-fac-validar').classList.add('show');
+  document.getElementById('txt-fac-validar').textContent = 'Analizando...';
+  document.getElementById('msg-fac-validar').className = 'msg';
+  document.getElementById('msg-fac-guardar').className = 'msg';
+
+  google.script.run
+    .withSuccessHandler(function(json) {
+      btn.disabled = false;
+      document.getElementById('sp-fac-validar').classList.remove('show');
+      document.getElementById('txt-fac-validar').textContent = '🔍 Validar facturas nuevas';
+      var d = JSON.parse(json);
+      if (!d.procesadas || d.procesadas.length === 0) {
+        mostrarMsg('msg-fac-validar', d.totalNuevos === 0 ? 'No hay facturas nuevas en la carpeta de Drive.' : 'No se pudo procesar ninguna.', 'info');
+        return;
+      }
+      d.procesadas.forEach(function(p) {
+        if (!facturasPreview.some(function(x) { return x.driveFileId === p.driveFileId; })) {
+          p._incluir = !p.error;
+          facturasPreview.push(p);
+        }
+      });
+      renderFacturasPreview();
+      document.getElementById('fac-preview-section').style.display = '';
+      mostrarMsg('msg-fac-validar', '✓ Se analizaron ' + d.procesadas.length + ' comprobantes nuevos. Revisá los datos antes de guardar.', 'ok');
+      var pend = document.getElementById('fac-pendientes');
+      if (d.pendientes > 0) {
+        pend.style.display = '';
+        pend.textContent = '⚠ Quedan ' + d.pendientes + ' comprobantes más por analizar — volvé a apretar "Validar facturas nuevas" para seguir.';
+      } else {
+        pend.style.display = 'none';
+      }
+    })
+    .withFailureHandler(function(e) {
+      btn.disabled = false;
+      document.getElementById('sp-fac-validar').classList.remove('show');
+      document.getElementById('txt-fac-validar').textContent = '🔍 Validar facturas nuevas';
+      mostrarMsg('msg-fac-validar', 'Error: ' + e.message, 'error');
+    })
+    .validarFacturasNuevas();
+}
+
+function renderFacturasPreview() {
+  var n = facturasPreview.length;
+  document.getElementById('fac-preview-count').textContent = n + ' comprobante' + (n === 1 ? '' : 's') + ' por guardar';
+  document.getElementById('fac-preview-body').innerHTML = facturasPreview.map(function(r, i) {
+    var verLink = '<a class="fac-ver" target="_blank" href="https://drive.google.com/file/d/' + r.driveFileId + '/view">👁 Ver original</a>';
+    var archivoCell = '<div style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(r.driveFileName) + '">' + r.driveFileName + '</div>' + verLink +
+      (r.error ? '<div class="fac-err-badge" title="' + esc(r.error) + '">⚠ ' + r.error + '</div>' : '');
+    return '<tr' + (r.error ? ' class="fac-err"' : '') + '>' +
+      '<td><input type="checkbox" ' + (r._incluir ? 'checked' : '') + ' onchange="facturasPreview[' + i + ']._incluir=this.checked"></td>' +
+      '<td>' + archivoCell + '</td>' +
+      '<td><input type="text" value="' + esc(r.fecha) + '" placeholder="dd/mm/aaaa" onchange="facturasPreview[' + i + '].fecha=this.value"></td>' +
+      '<td><input type="text" value="' + esc(r.proveedor) + '" onchange="facturasPreview[' + i + '].proveedor=this.value"></td>' +
+      '<td><input type="text" value="' + esc(r.cuit) + '" onchange="facturasPreview[' + i + '].cuit=this.value"></td>' +
+      '<td><input type="text" style="width:44px" maxlength="2" value="' + esc(r.tipoFactura) + '" onchange="facturasPreview[' + i + '].tipoFactura=this.value"></td>' +
+      '<td><input type="text" value="' + esc(r.numeroFactura) + '" onchange="facturasPreview[' + i + '].numeroFactura=this.value"></td>' +
+      '<td><input type="number" step="0.01" value="' + r.neto + '" onchange="facturasPreview[' + i + '].neto=parseFloat(this.value)||0"></td>' +
+      '<td><input type="number" step="0.01" value="' + r.iva + '" onchange="facturasPreview[' + i + '].iva=parseFloat(this.value)||0"></td>' +
+      '<td><input type="number" step="0.01" value="' + (r.impInterno || 0) + '" onchange="facturasPreview[' + i + '].impInterno=parseFloat(this.value)||0"></td>' +
+      '<td><input type="number" step="0.01" value="' + (r.idc || 0) + '" onchange="facturasPreview[' + i + '].idc=parseFloat(this.value)||0"></td>' +
+      '<td><input type="number" step="0.01" value="' + r.total + '" onchange="facturasPreview[' + i + '].total=parseFloat(this.value)||0"></td>' +
+      '<td><select onchange="facturasPreview[' + i + '].moneda=this.value">' +
+        '<option ' + (r.moneda === 'ARS' ? 'selected' : '') + '>ARS</option>' +
+        '<option ' + (r.moneda === 'USD' ? 'selected' : '') + '>USD</option>' +
+        '</select></td>' +
+      '<td><input type="text" value="' + esc(r.detalle) + '" onchange="facturasPreview[' + i + '].detalle=this.value"></td>' +
+      '</tr>';
+  }).join('');
+}
+
+function toggleAllFacturas(chk) {
+  facturasPreview.forEach(function(r) { r._incluir = chk.checked; });
+  renderFacturasPreview();
+}
+
+function cancelarPreviewFacturas() {
+  facturasPreview = [];
+  document.getElementById('fac-preview-section').style.display = 'none';
+  document.getElementById('fac-pendientes').style.display = 'none';
+}
+
+function confirmarGuardarFacturas() {
+  var seleccionadas = facturasPreview.filter(function(r) { return r._incluir; });
+  if (seleccionadas.length === 0) { mostrarMsg('msg-fac-guardar', 'No hay comprobantes seleccionados.', 'error'); return; }
+  var sinDatos = seleccionadas.filter(function(r) { return !r.proveedor || !r.fecha; });
+  if (sinDatos.length > 0 && !confirm(sinDatos.length + ' comprobante(s) no tienen fecha o proveedor cargado. ¿Guardar igual?')) return;
+
+  var btn = document.getElementById('btn-fac-guardar');
+  btn.disabled = true;
+  document.getElementById('sp-fac-guardar').classList.add('show');
+  document.getElementById('txt-fac-guardar').textContent = 'Guardando...';
+
+  google.script.run
+    .withSuccessHandler(function(json) {
+      btn.disabled = false;
+      document.getElementById('sp-fac-guardar').classList.remove('show');
+      document.getElementById('txt-fac-guardar').textContent = '💾 Guardar seleccionadas';
+      var r = JSON.parse(json);
+      if (r.ok) {
+        mostrarMsg('msg-fac-guardar', '✓ Se guardaron ' + r.guardadas + ' facturas' + (r.duplicadas ? ' (' + r.duplicadas + ' ya existían).' : '.'), 'ok');
+        var guardadosIds = {};
+        seleccionadas.forEach(function(s) { guardadosIds[s.driveFileId] = true; });
+        facturasPreview = facturasPreview.filter(function(r) { return !guardadosIds[r.driveFileId]; });
+        renderFacturasPreview();
+        if (facturasPreview.length === 0) document.getElementById('fac-preview-section').style.display = 'none';
+        cargarFacturas();
+      } else {
+        mostrarMsg('msg-fac-guardar', 'Error: ' + r.msg, 'error');
+      }
+    })
+    .withFailureHandler(function(e) {
+      btn.disabled = false;
+      document.getElementById('sp-fac-guardar').classList.remove('show');
+      document.getElementById('txt-fac-guardar').textContent = '💾 Guardar seleccionadas';
+      mostrarMsg('msg-fac-guardar', 'Error: ' + e.message, 'error');
+    })
+    .guardarFacturas(JSON.stringify(seleccionadas));
+}
+
+// ── Usuarios (admin) ────────────────────────────────────────
+var USUARIOS_CACHE = [];
+var USUARIO_SELECCIONADO = null; // email del usuario abierto en el panel, o null
+
+function cargarUsuarios() {
+  google.script.run
+    .withSuccessHandler(function(json) {
+      USUARIOS_CACHE = (JSON.parse(json).usuarios) || [];
+      renderUsuarios();
+    })
+    .withFailureHandler(function(e) { console.error(e); })
+    .getUsuarios();
+}
+
+function renderUsuarios() {
+  var cont = document.getElementById('usr-list');
+  if (!USUARIOS_CACHE.length) { cont.innerHTML = '<div class="no-data">No hay usuarios cargados.</div>'; return; }
+  cont.innerHTML = USUARIOS_CACHE.map(function(u) {
+    var sel = USUARIO_SELECCIONADO === u.email ? ' selected' : '';
+    var inicial = (u.nombre || u.email).trim().charAt(0).toUpperCase();
+    return '<div class="usr-item' + sel + '" onclick=\'seleccionarUsuario("' + u.email + '")\'>' +
+      '<div class="usr-avatar">' + inicial + '</div>' +
+      '<div><div class="usr-item-nombre">' + esc(u.nombre) + '</div><div class="usr-item-email">' + esc(u.email) + '</div></div>' +
+      (u.rol === 'admin' ? '<span class="usr-admin-badge">Admin</span>' : '') +
+      '</div>';
+  }).join('');
+}
+
+function renderSelectsPermisos(permisos) {
+  var grid = document.getElementById('usr-perm-grid');
+  grid.innerHTML = MODULOS.map(function(m) {
+    var valor = (permisos || {})[m] || 'ninguno';
+    return '<div><label style="display:block;font-size:11px;font-weight:700;color:#666;margin-bottom:3px">' + MODULO_LABEL[m] + '</label>' +
+      '<select id="usr-perm-' + m + '">' +
+        '<option value="ninguno"' + (valor === 'ninguno' ? ' selected' : '') + '>Ninguno</option>' +
+        '<option value="lectura"' + (valor === 'lectura' ? ' selected' : '') + '>Lectura</option>' +
+        '<option value="escritura"' + (valor === 'escritura' ? ' selected' : '') + '>Escritura</option>' +
+      '</select></div>';
+  }).join('');
+}
+
+function seleccionarUsuario(email) {
+  USUARIO_SELECCIONADO = email;
+  renderUsuarios();
+  var u = USUARIOS_CACHE.find(function(x) { return x.email === email; });
+  if (!u) return;
+
+  document.getElementById('usr-detail-empty').style.display = 'none';
+  document.getElementById('usr-detail-content').style.display = 'block';
+  document.getElementById('usr-detail-titulo').textContent = u.rol === 'admin' ? 'Administrador' : 'Editar usuario';
+  document.getElementById('usr-email').value = u.email;
+  document.getElementById('usr-email').disabled = true;
+  document.getElementById('usr-nombre').value = u.nombre;
+  document.getElementById('usr-save-msg').className = 'msg';
+  renderSelectsPermisos(u.permisos);
+
+  var esAdmin = u.rol === 'admin';
+  document.querySelectorAll('#usr-perm-grid select').forEach(function(s) { s.disabled = esAdmin; });
+  document.getElementById('usr-nombre').disabled = esAdmin;
+  document.querySelector('#usr-detail-content .btn-primary').style.display = esAdmin ? 'none' : 'inline-flex';
+  document.getElementById('usr-btn-eliminar').style.display = esAdmin ? 'none' : 'inline-flex';
+}
+
+function nuevoUsuario() {
+  USUARIO_SELECCIONADO = null;
+  renderUsuarios();
+  document.getElementById('usr-detail-empty').style.display = 'none';
+  document.getElementById('usr-detail-content').style.display = 'block';
+  document.getElementById('usr-detail-titulo').textContent = 'Nuevo usuario';
+  document.getElementById('usr-email').value = '';
+  document.getElementById('usr-email').disabled = false;
+  document.getElementById('usr-nombre').value = '';
+  document.getElementById('usr-nombre').disabled = false;
+  document.getElementById('usr-save-msg').className = 'msg';
+  renderSelectsPermisos({});
+  document.querySelectorAll('#usr-perm-grid select').forEach(function(s) { s.disabled = false; });
+  document.querySelector('#usr-detail-content .btn-primary').style.display = 'inline-flex';
+  document.getElementById('usr-btn-eliminar').style.display = 'none';
+}
+
+function cerrarDetalleUsuario() {
+  USUARIO_SELECCIONADO = null;
+  renderUsuarios();
+  document.getElementById('usr-detail-empty').style.display = 'block';
+  document.getElementById('usr-detail-content').style.display = 'none';
+}
+
+function leerPermisosFormulario() {
+  var permisos = {};
+  MODULOS.forEach(function(m) {
+    var el = document.getElementById('usr-perm-' + m);
+    permisos[m] = el ? el.value : 'ninguno';
+  });
+  return permisos;
+}
+
+function guardarUsuario() {
+  var msgEl = document.getElementById('usr-save-msg');
+  var email = document.getElementById('usr-email').value.trim();
+  var nombre = document.getElementById('usr-nombre').value.trim();
+  var permisos = leerPermisosFormulario();
+
+  if (!email || email.indexOf('@') === -1) {
+    msgEl.className = 'msg error show';
+    msgEl.textContent = 'Ingresá un email válido.';
+    return;
+  }
+
+  var esNuevo = !USUARIO_SELECCIONADO;
+  msgEl.className = 'msg info show';
+  msgEl.textContent = 'Guardando...';
+
+  var accion = esNuevo ? 'agregarUsuario' : 'actualizarUsuario';
+  var body = JSON.stringify({ email: email, nombre: nombre, permisos: permisos });
+
+  google.script.run
+    .withSuccessHandler(function(json) {
+      var r = JSON.parse(json);
+      if (!r.ok) { msgEl.className = 'msg error show'; msgEl.textContent = 'Error: ' + (r.error || ''); return; }
+      msgEl.className = 'msg ok show';
+      msgEl.textContent = '✓ Guardado';
+      USUARIO_SELECCIONADO = email;
+      cargarUsuarios();
+    })
+    .withFailureHandler(function(e) {
+      msgEl.className = 'msg error show';
+      msgEl.textContent = 'Error al guardar: ' + e.message;
+    })[accion](body);
+}
+
+function eliminarUsuarioActual() {
+  if (!USUARIO_SELECCIONADO) return;
+  if (!confirm('¿Eliminar a ' + USUARIO_SELECCIONADO + '? Va a perder el acceso a la aplicación.')) return;
+  var msgEl = document.getElementById('usr-save-msg');
+  msgEl.className = 'msg info show';
+  msgEl.textContent = 'Eliminando...';
+
+  google.script.run
+    .withSuccessHandler(function(json) {
+      var r = JSON.parse(json);
+      if (!r.ok) { msgEl.className = 'msg error show'; msgEl.textContent = 'Error: ' + (r.error || ''); return; }
+      cerrarDetalleUsuario();
+      cargarUsuarios();
+    })
+    .withFailureHandler(function(e) {
+      msgEl.className = 'msg error show';
+      msgEl.textContent = 'Error al eliminar: ' + e.message;
+    })
+    .eliminarUsuario(JSON.stringify({ email: USUARIO_SELECCIONADO }));
 }
 </script>
 </body>
