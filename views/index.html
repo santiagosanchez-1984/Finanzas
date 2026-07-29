@@ -1010,11 +1010,12 @@ body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !impo
             <div class="qn-pres-pagos-grid">
               <div class="card">
                 <h3>📐 Presupuesto</h3>
-                <div class="qn-solo-escritura" style="display:grid;grid-template-columns:1fr 2fr 1fr auto;gap:8px;margin-bottom:14px;align-items:end">
+                <div class="qn-solo-escritura" style="display:grid;grid-template-columns:1fr 2fr 1fr auto auto;gap:8px;margin-bottom:14px;align-items:end">
                   <div class="f-item"><label>Fecha</label><input type="text" id="qn-pre-fecha" placeholder="dd/mm/aaaa"></div>
                   <div class="f-item"><label>Detalle</label><input type="text" id="qn-pre-detalle"></div>
                   <div class="f-item"><label>Monto</label><input type="number" step="0.01" id="qn-pre-monto"></div>
-                  <button class="btn btn-primary" onclick="agregarPresupuestoQuinchoForm()">➕</button>
+                  <button class="btn btn-primary" id="qn-pre-btn-guardar" onclick="guardarPresupuestoQuinchoForm()">➕</button>
+                  <button class="btn btn-gray" id="qn-pre-btn-cancelar" onclick="cancelarEdicionPresupuestoQuincho()" style="display:none">✕</button>
                 </div>
                 <div id="qn-pre-msg" class="msg"></div>
                 <div class="tabla-scroll tabla-wrap">
@@ -1224,6 +1225,9 @@ function makeRunner() {
     getQuinchoPresupuesto:function(etapaId) { finish(apiCall('/api/quincho' + qs({ action: 'presupuesto', etapaId: etapaId }))); },
     agregarPresupuestoQuincho:function(dataJson) {
       finish(apiCall('/api/quincho?action=presupuesto-agregar', { method: 'POST', body: dataJson }));
+    },
+    editarPresupuestoQuincho:function(dataJson) {
+      finish(apiCall('/api/quincho?action=presupuesto-editar', { method: 'POST', body: dataJson }));
     },
     eliminarPresupuestoQuincho:function(fila) {
       finish(apiCall('/api/quincho?action=presupuesto-eliminar', { method: 'POST', body: JSON.stringify({ fila: fila }) }));
@@ -3984,6 +3988,7 @@ function seleccionarEtapaQuincho(id) {
   document.getElementById('qn-kpi-saldo').textContent       = fmtARS(e.saldo);
 
   cancelarFormMaterialQuincho();
+  cancelarEdicionPresupuestoQuincho();
   cargarQuinchoMateriales();
   cargarQuinchoPresupuestoPagos();
 }
@@ -4202,7 +4207,9 @@ function renderQuinchoPresupuesto() {
   body.innerHTML = QN_PRESUPUESTO.map(function(p) {
     return '<tr><td>' + esc(p.fecha) + '</td><td>' + esc(p.detalle) + '</td>' +
       '<td style="text-align:right;font-weight:700">' + fmtARS(p.monto) + '</td>' +
-      '<td class="qn-solo-escritura"><button class="btn btn-red" style="padding:4px 9px" onclick="eliminarPresupuestoQuinchoFila(' + p.fila + ')">🗑️</button></td></tr>';
+      '<td class="qn-solo-escritura" style="white-space:nowrap">' +
+      '<button class="btn btn-gray" style="padding:4px 9px" onclick="editarPresupuestoQuinchoFila(' + p.fila + ')">✏️</button> ' +
+      '<button class="btn btn-red" style="padding:4px 9px" onclick="eliminarPresupuestoQuinchoFila(' + p.fila + ')">🗑️</button></td></tr>';
   }).join('');
 }
 
@@ -4216,29 +4223,56 @@ function renderQuinchoPagos() {
   }).join('');
 }
 
-function agregarPresupuestoQuinchoForm() {
+var QN_PRESUPUESTO_EDIT_FILA = null;
+
+function guardarPresupuestoQuinchoForm() {
   var msgEl = document.getElementById('qn-pre-msg');
   var detalle = document.getElementById('qn-pre-detalle').value.trim();
   var monto = parseFloat(document.getElementById('qn-pre-monto').value);
   if (!detalle || !monto) { msgEl.className = 'msg error show'; msgEl.textContent = 'Detalle y monto son obligatorios.'; return; }
-  var body = { etapaId: QN_ETAPA_SEL, fecha: document.getElementById('qn-pre-fecha').value.trim(), detalle: detalle, monto: monto };
+  var fecha = document.getElementById('qn-pre-fecha').value.trim();
+
+  var editando = !!QN_PRESUPUESTO_EDIT_FILA;
+  var body = editando
+    ? { fila: QN_PRESUPUESTO_EDIT_FILA, fecha: fecha, detalle: detalle, monto: monto }
+    : { etapaId: QN_ETAPA_SEL, fecha: fecha, detalle: detalle, monto: monto };
+
   google.script.run
     .withSuccessHandler(function(json) {
       var r = JSON.parse(json);
       if (!r.ok) { msgEl.className = 'msg error show'; msgEl.textContent = r.msg || 'Error al guardar'; return; }
       msgEl.className = 'msg';
-      ['qn-pre-fecha', 'qn-pre-detalle', 'qn-pre-monto'].forEach(function(id) { document.getElementById(id).value = ''; });
+      cancelarEdicionPresupuestoQuincho();
       cargarQuinchoPresupuestoPagos();
       cargarQuincho();
     })
     .withFailureHandler(function(e) { msgEl.className = 'msg error show'; msgEl.textContent = 'Error: ' + e.message; })
-    .agregarPresupuestoQuincho(JSON.stringify(body));
+    [editando ? 'editarPresupuestoQuincho' : 'agregarPresupuestoQuincho'](JSON.stringify(body));
+}
+
+function editarPresupuestoQuinchoFila(fila) {
+  var p = QN_PRESUPUESTO.find(function(x) { return x.fila === fila; });
+  if (!p) return;
+  QN_PRESUPUESTO_EDIT_FILA = fila;
+  document.getElementById('qn-pre-fecha').value = p.fecha;
+  document.getElementById('qn-pre-detalle').value = p.detalle;
+  document.getElementById('qn-pre-monto').value = p.monto;
+  document.getElementById('qn-pre-btn-guardar').textContent = '💾';
+  document.getElementById('qn-pre-btn-cancelar').style.display = '';
+  document.getElementById('qn-pre-msg').className = 'msg';
+}
+
+function cancelarEdicionPresupuestoQuincho() {
+  QN_PRESUPUESTO_EDIT_FILA = null;
+  ['qn-pre-fecha', 'qn-pre-detalle', 'qn-pre-monto'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('qn-pre-btn-guardar').textContent = '➕';
+  document.getElementById('qn-pre-btn-cancelar').style.display = 'none';
 }
 
 function eliminarPresupuestoQuinchoFila(fila) {
   if (!confirm('¿Eliminar este ítem de presupuesto?')) return;
   google.script.run
-    .withSuccessHandler(function() { cargarQuinchoPresupuestoPagos(); cargarQuincho(); })
+    .withSuccessHandler(function() { cancelarEdicionPresupuestoQuincho(); cargarQuinchoPresupuestoPagos(); cargarQuincho(); })
     .withFailureHandler(function(e) { alert('Error al eliminar: ' + e.message); })
     .eliminarPresupuestoQuincho(fila);
 }

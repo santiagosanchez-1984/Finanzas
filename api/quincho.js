@@ -12,7 +12,8 @@ const {
   HEADER_ETAPAS, HEADER_MATERIALES, HEADER_PRESUPUESTO, HEADER_PAGOS,
   leerEtapas, leerMateriales, leerPresupuesto, leerPagos,
   calcularTotalesEtapa, claveDuplicadoMaterial, subirImagenADrive,
-  analizarMaterialConGemini, agregarEtapa, actualizarEtapa, eliminarFila,
+  analizarMaterialConGemini, agregarEtapa, actualizarEtapa,
+  actualizarPresupuesto, eliminarFila,
 } = require('../lib/quincho');
 
 const QUINCHO_SHEET_ID = process.env.QUINCHO_SHEET_ID;
@@ -22,7 +23,7 @@ const QUINCHO_MATERIALES_FOLDER_ID = process.env.QUINCHO_MATERIALES_FOLDER_ID;
 const NIVEL_POR_ACCION = {
   'etapas': 'lectura', 'crear-etapa': 'escritura', 'editar-etapa': 'escritura',
   'materiales': 'lectura', 'materiales-analizar': 'escritura', 'materiales-guardar': 'escritura', 'materiales-eliminar': 'escritura',
-  'presupuesto': 'lectura', 'presupuesto-agregar': 'escritura', 'presupuesto-eliminar': 'escritura',
+  'presupuesto': 'lectura', 'presupuesto-agregar': 'escritura', 'presupuesto-editar': 'escritura', 'presupuesto-eliminar': 'escritura',
   'pagos': 'lectura', 'pagos-agregar': 'escritura', 'pagos-eliminar': 'escritura',
 };
 
@@ -68,6 +69,9 @@ module.exports = async function(req, res) {
       case 'presupuesto-agregar':
         if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
         return await accionPresupuestoAgregar(req, res, sheets);
+      case 'presupuesto-editar':
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+        return await accionPresupuestoEditar(req, res, sheets);
       case 'presupuesto-eliminar':
         if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
         return await accionEliminar(req, res, sheets, SHEET_PRESUPUESTO);
@@ -189,6 +193,13 @@ async function accionPresupuestoAgregar(req, res, sheets) {
     insertDataOption: 'INSERT_ROWS',
     requestBody: { values: [[etapaId, fecha || '', detalle, monto]] },
   });
+  res.json({ ok: true });
+}
+
+async function accionPresupuestoEditar(req, res, sheets) {
+  const { fila, fecha, detalle, monto } = req.body || {};
+  if (!fila || !detalle || !monto) return res.json({ ok: false, msg: 'Faltan datos obligatorios' });
+  await actualizarPresupuesto(sheets, QUINCHO_SHEET_ID, { fila, fecha, detalle, monto });
   res.json({ ok: true });
 }
 
