@@ -146,6 +146,26 @@ body.fac-sin-escritura .fac-dup-row .btn-red { display: none; }
 .usr-perm-grid label { font-size: 11px; margin-bottom: 3px; }
 .usr-perm-grid select { width: 100%; padding: 7px 9px; border-radius: 7px; border: 1.5px solid #d0dce8; font-size: 12.5px; }
 
+/* ── Quincho: árbol de etapas + detalle ── */
+.qn-layout { display: grid; grid-template-columns: 260px 1fr; gap: 16px; align-items: start; }
+.qn-etapas { display: flex; flex-direction: column; gap: 6px; }
+.qn-etapa-item { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 8px; cursor: pointer; background: #f8fafc; border: 1.5px solid transparent; }
+.qn-etapa-item:hover { background: #eef5ff; }
+.qn-etapa-item.selected { border-color: #0A3560; background: #eef5ff; }
+.qn-etapa-nombre { font-size: 13px; font-weight: 700; color: #1a2940; }
+.qn-etapa-saldo { font-size: 11px; color: #888; }
+.qn-etapa-saldo.pos { color: #e74c3c; font-weight: 700; }
+.qn-etapa-saldo.cero { color: #27ae60; font-weight: 700; }
+.qn-subtabs { display: flex; gap: 8px; margin-bottom: 14px; }
+.qn-subtab-btn { background: #e8eef5; color: #444; }
+.qn-subtab-btn.active { background: #0A3560; color: #fff; }
+.qn-pres-pagos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !important; }
+@media (max-width: 900px) {
+  .qn-layout { grid-template-columns: 1fr; }
+  .qn-pres-pagos-grid { grid-template-columns: 1fr; }
+}
+
 /* ── Modal editar factura ── */
 .fac-modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(10,20,35,.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
 .fac-modal-backdrop.show { display: flex; }
@@ -192,6 +212,7 @@ body.fac-sin-escritura .fac-dup-row .btn-red { display: none; }
   <button id="nav-inversiones" onclick="showTab('inversiones')">📊 Inversiones</button>
   <button id="nav-facturas" onclick="showTab('facturas')">🧾 Facturas IVA</button>
   <button id="nav-mercadopago" onclick="showTab('mercadopago')">💳 Mercado Pago</button>
+  <button id="nav-quincho" onclick="showTab('quincho')">🏗️ Quincho</button>
   <button id="nav-usuarios" onclick="showTab('usuarios')" style="display:none">👤 Usuarios</button>
 </nav>
 
@@ -901,6 +922,130 @@ body.fac-sin-escritura .fac-dup-row .btn-red { display: none; }
   </div>
 </div>
 
+<!-- ═══ QUINCHO ═══ -->
+<div id="tab-quincho" class="tab-content">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <h3 style="margin:0">🏗️ Quincho</h3>
+      <button class="btn btn-green qn-solo-escritura" onclick="nuevaEtapaQuincho()">➕ Nueva etapa</button>
+    </div>
+    <div class="qn-layout">
+      <div>
+        <div id="qn-etapas-list" class="qn-etapas"><div class="no-data">Cargando...</div></div>
+      </div>
+      <div id="qn-detalle">
+        <div id="qn-detalle-empty" class="card" style="background:#f8f9fa;color:#999;font-size:13px">👈 Elegí una etapa de la lista.</div>
+        <div id="qn-detalle-content" style="display:none">
+
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <h3 id="qn-etapa-titulo" style="margin:0">–</h3>
+                <button class="btn btn-gray qn-solo-escritura" style="padding:4px 10px" onclick="abrirModalEditarEtapaQuincho()">✏️ Editar</button>
+              </div>
+              <span id="qn-etapa-estado-badge" class="badge b-ing"></span>
+            </div>
+            <div id="qn-etapa-detalle-txt" style="font-size:12.5px;color:#888;margin-top:6px"></div>
+            <div class="kpi-grid" style="margin-top:14px">
+              <div class="kpi-card bal"><div class="kpi-label">Materiales</div><div class="kpi-val bal-pos" id="qn-kpi-materiales">–</div></div>
+              <div class="kpi-card ing"><div class="kpi-label">Presupuesto</div><div class="kpi-val ing" id="qn-kpi-presupuesto">–</div></div>
+              <div class="kpi-card egr"><div class="kpi-label">Pagado</div><div class="kpi-val egr" id="qn-kpi-pagado">–</div></div>
+              <div class="kpi-card aho"><div class="kpi-label">Saldo (falta pagar)</div><div class="kpi-val aho" id="qn-kpi-saldo">–</div></div>
+            </div>
+          </div>
+
+          <div class="qn-subtabs">
+            <button class="btn qn-subtab-btn active" id="qn-sub-btn-materiales" onclick="mostrarSubtabQuincho('materiales')">📦 Materiales</button>
+            <button class="btn qn-subtab-btn" id="qn-sub-btn-presupuesto" onclick="mostrarSubtabQuincho('presupuesto')">💵 Presupuesto y Pagos</button>
+          </div>
+
+          <!-- Materiales -->
+          <div id="qn-sub-materiales">
+            <div class="card qn-solo-escritura" style="margin-bottom:14px">
+              <h3>📷 Cargar material</h3>
+              <div class="drop-zone" id="qn-dz-material" onclick="document.getElementById('qn-file-material').click()"
+                   ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')"
+                   ondrop="event.preventDefault();this.classList.remove('over');procesarFotoMaterialQuincho(event.dataTransfer.files[0])">
+                <input type="file" id="qn-file-material" accept="image/*" capture="environment" onchange="procesarFotoMaterialQuincho(this.files[0])">
+                <div class="dz-icon">📷</div>
+                <div class="dz-title">Subir foto de la compra</div>
+                <div class="dz-sub">Se analiza automáticamente con IA (fecha, proveedor, número de factura, detalle, total) y se guarda en Drive</div>
+              </div>
+              <div id="qn-material-analizando" class="msg info"></div>
+              <div style="text-align:center;margin-top:10px">
+                <button class="btn btn-gray" onclick="abrirFormMaterialManual()">✏️ Cargar a mano (sin foto)</button>
+              </div>
+
+              <div id="qn-material-form" style="display:none;margin-top:16px;border-top:1px solid #e8eef5;padding-top:16px">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+                  <div class="f-item"><label>Fecha</label><input type="text" id="qn-mat-fecha" placeholder="dd/mm/aaaa"></div>
+                  <div class="f-item"><label>Proveedor</label><input type="text" id="qn-mat-proveedor"></div>
+                  <div class="f-item"><label>Nro. Factura</label><input type="text" id="qn-mat-numero"></div>
+                  <div class="f-item" style="grid-column:span 2"><label>Detalle</label><input type="text" id="qn-mat-detalle"></div>
+                  <div class="f-item"><label>Total</label><input type="number" step="0.01" id="qn-mat-total"></div>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center;margin-top:14px">
+                  <button class="btn btn-primary" id="qn-btn-guardar-material" onclick="guardarMaterialQuinchoForm()">
+                    <span class="spinner" id="qn-sp-guardar-material"></span>
+                    <span id="qn-txt-guardar-material">💾 Guardar</span>
+                  </button>
+                  <button class="btn btn-gray" onclick="cancelarFormMaterialQuincho()">✕ Cancelar</button>
+                </div>
+                <div id="qn-material-msg" class="msg"></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>📋 Materiales cargados</h3>
+              <div class="tabla-scroll tabla-wrap">
+                <table><thead><tr>
+                  <th>Fecha</th><th>Proveedor</th><th>Nro. Factura</th><th>Detalle</th><th style="text-align:right">Total</th><th>Origen</th><th></th>
+                </tr></thead><tbody id="qn-materiales-body"></tbody></table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Presupuesto y Pagos -->
+          <div id="qn-sub-presupuesto" style="display:none">
+            <div class="qn-pres-pagos-grid">
+              <div class="card">
+                <h3>📐 Presupuesto</h3>
+                <div class="qn-solo-escritura" style="display:grid;grid-template-columns:1fr 2fr 1fr auto;gap:8px;margin-bottom:14px;align-items:end">
+                  <div class="f-item"><label>Fecha</label><input type="text" id="qn-pre-fecha" placeholder="dd/mm/aaaa"></div>
+                  <div class="f-item"><label>Detalle</label><input type="text" id="qn-pre-detalle"></div>
+                  <div class="f-item"><label>Monto</label><input type="number" step="0.01" id="qn-pre-monto"></div>
+                  <button class="btn btn-primary" onclick="agregarPresupuestoQuinchoForm()">➕</button>
+                </div>
+                <div id="qn-pre-msg" class="msg"></div>
+                <div class="tabla-scroll tabla-wrap">
+                  <table><thead><tr><th>Fecha</th><th>Detalle</th><th style="text-align:right">Monto</th><th></th></tr></thead>
+                  <tbody id="qn-presupuesto-body"></tbody></table>
+                </div>
+              </div>
+              <div class="card">
+                <h3>💳 Pagos</h3>
+                <div class="qn-solo-escritura" style="display:grid;grid-template-columns:1fr 1fr 2fr 1fr auto;gap:8px;margin-bottom:14px;align-items:end">
+                  <div class="f-item"><label>Fecha</label><input type="text" id="qn-pag-fecha" placeholder="dd/mm/aaaa"></div>
+                  <div class="f-item"><label>Mes</label><input type="text" id="qn-pag-mes" placeholder="Marzo"></div>
+                  <div class="f-item"><label>Detalle</label><input type="text" id="qn-pag-detalle"></div>
+                  <div class="f-item"><label>Monto</label><input type="number" step="0.01" id="qn-pag-monto"></div>
+                  <button class="btn btn-primary" onclick="agregarPagoQuinchoForm()">➕</button>
+                </div>
+                <div id="qn-pag-msg" class="msg"></div>
+                <div class="tabla-scroll tabla-wrap">
+                  <table><thead><tr><th>Fecha</th><th>Mes</th><th>Detalle</th><th style="text-align:right">Monto</th><th></th></tr></thead>
+                  <tbody id="qn-pagos-body"></tbody></table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </main>
 
 <!-- ═══ MODAL: Editar factura ═══ -->
@@ -933,6 +1078,32 @@ body.fac-sin-escritura .fac-dup-row .btn-red { display: none; }
       <button class="btn btn-gray" onclick="cerrarEditarFactura()">Cancelar</button>
     </div>
     <div id="msg-fac-editar" class="msg"></div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Nueva/Editar etapa de Quincho ═══ -->
+<div id="qn-etapa-modal" class="fac-modal-backdrop">
+  <div class="card fac-modal-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h3 id="qn-etapa-modal-titulo" style="margin:0">➕ Nueva etapa</h3>
+      <button class="btn btn-gray" onclick="cerrarModalEtapaQuincho()" style="padding:4px 10px">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="f-item" style="grid-column:1 / -1"><label>Nombre</label><input type="text" id="qne-nombre" placeholder="ej. Etapa 7 - Deck"></div>
+      <div class="f-item"><label>Fecha</label><input type="text" id="qne-fecha" placeholder="dd/mm/aaaa"></div>
+      <div class="f-item"><label>Estado</label>
+        <select id="qne-estado"><option value="En curso">En curso</option><option value="Terminada">Terminada</option></select>
+      </div>
+      <div class="f-item" style="grid-column:1 / -1"><label>Detalle</label><input type="text" id="qne-detalle" placeholder="Qué incluye esta etapa"></div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:18px">
+      <button class="btn btn-primary" onclick="guardarModalEtapaQuincho()">
+        <span class="spinner" id="qn-sp-etapa-modal"></span>
+        <span id="qn-txt-etapa-modal">💾 Guardar</span>
+      </button>
+      <button class="btn btn-gray" onclick="cerrarModalEtapaQuincho()">Cancelar</button>
+    </div>
+    <div id="qn-etapa-modal-msg" class="msg"></div>
   </div>
 </div>
 
@@ -1033,6 +1204,37 @@ function makeRunner() {
     agregarUsuario:function(dataJson) { finish(apiCall('/api/usuarios?action=add', { method: 'POST', body: dataJson })); },
     actualizarUsuario:function(dataJson) { finish(apiCall('/api/usuarios?action=update', { method: 'POST', body: dataJson })); },
     eliminarUsuario:function(dataJson) { finish(apiCall('/api/usuarios?action=remove', { method: 'POST', body: dataJson })); },
+    getQuinchoEtapas:function() { finish(apiCall('/api/quincho?action=etapas')); },
+    crearEtapaQuincho:function(dataJson) {
+      finish(apiCall('/api/quincho?action=crear-etapa', { method: 'POST', body: dataJson }));
+    },
+    editarEtapaQuincho:function(dataJson) {
+      finish(apiCall('/api/quincho?action=editar-etapa', { method: 'POST', body: dataJson }));
+    },
+    getQuinchoMateriales:function(etapaId) { finish(apiCall('/api/quincho' + qs({ action: 'materiales', etapaId: etapaId }))); },
+    analizarMaterialQuincho:function(dataJson) {
+      finish(apiCall('/api/quincho?action=materiales-analizar', { method: 'POST', body: dataJson }));
+    },
+    guardarMaterialQuincho:function(dataJson) {
+      finish(apiCall('/api/quincho?action=materiales-guardar', { method: 'POST', body: dataJson }));
+    },
+    eliminarMaterialQuincho:function(fila) {
+      finish(apiCall('/api/quincho?action=materiales-eliminar', { method: 'POST', body: JSON.stringify({ fila: fila }) }));
+    },
+    getQuinchoPresupuesto:function(etapaId) { finish(apiCall('/api/quincho' + qs({ action: 'presupuesto', etapaId: etapaId }))); },
+    agregarPresupuestoQuincho:function(dataJson) {
+      finish(apiCall('/api/quincho?action=presupuesto-agregar', { method: 'POST', body: dataJson }));
+    },
+    eliminarPresupuestoQuincho:function(fila) {
+      finish(apiCall('/api/quincho?action=presupuesto-eliminar', { method: 'POST', body: JSON.stringify({ fila: fila }) }));
+    },
+    getQuinchoPagos:function(etapaId) { finish(apiCall('/api/quincho' + qs({ action: 'pagos', etapaId: etapaId }))); },
+    agregarPagoQuincho:function(dataJson) {
+      finish(apiCall('/api/quincho?action=pagos-agregar', { method: 'POST', body: dataJson }));
+    },
+    eliminarPagoQuincho:function(fila) {
+      finish(apiCall('/api/quincho?action=pagos-eliminar', { method: 'POST', body: JSON.stringify({ fila: fila }) }));
+    },
   };
   return runner;
 }
@@ -1042,7 +1244,7 @@ function cerrarSesion() {
   apiCall('/api/logout', { method: 'POST' }).finally(function() { location.reload(); });
 }
 
-var TABS   = ['dashboard','movimientos','sueldos','evolucion','inversiones','facturas','mercadopago','usuarios'];
+var TABS   = ['dashboard','movimientos','sueldos','evolucion','inversiones','facturas','mercadopago','quincho','usuarios'];
 var metaDatos = { meses: [], bancos: [], cats: [], tipos: [] };
 var chartMensual = null, chartCats = null, chartSubcat = null, chartSueldos = null, chartEvolucion = null;
 var sueldosTodos = [], evolucionDatos = [];
@@ -1146,16 +1348,16 @@ function categorizarRow(desc) {
 
 // ── Permisos por modulo ──────────────────────────────────────
 var YO = null;
-var MODULOS = ['dashboard', 'movimientos', 'inversiones', 'facturas', 'mercadopago'];
+var MODULOS = ['dashboard', 'movimientos', 'inversiones', 'facturas', 'mercadopago', 'quincho'];
 var MODULO_LABEL = {
   dashboard: 'Inicio', movimientos: 'Movimientos (+ Importar, Sueldos y Evolución)',
-  inversiones: 'Inversiones', facturas: 'Facturas IVA', mercadopago: 'Mercado Pago',
+  inversiones: 'Inversiones', facturas: 'Facturas IVA', mercadopago: 'Mercado Pago', quincho: 'Quincho',
 };
 // A que modulo pertenece cada pestaña de nav (varias pestañas comparten modulo).
 var MODULO_POR_TAB = {
   dashboard: 'dashboard', movimientos: 'movimientos',
   sueldos: 'movimientos', evolucion: 'movimientos', inversiones: 'inversiones', facturas: 'facturas',
-  mercadopago: 'mercadopago',
+  mercadopago: 'mercadopago', quincho: 'quincho',
 };
 
 function puede(modulo, nivel) {
@@ -1199,6 +1401,9 @@ function aplicarPermisosUI() {
   }
   if (!puede('mercadopago', 'escritura')) {
     document.querySelectorAll('#tab-mercadopago .drop-zone').forEach(function(el){ el.style.display = 'none'; });
+  }
+  if (!puede('quincho', 'escritura')) {
+    document.body.classList.add('quincho-sin-escritura');
   }
 
   if (!primerTabVisible && YO.rol !== 'admin') {
@@ -1310,6 +1515,7 @@ function showTab(nombre) {
   if (nombre === 'inversiones') cargarInversiones();
   if (nombre === 'facturas')    cargarFacturas();
   if (nombre === 'mercadopago') cargarMercadoPago();
+  if (nombre === 'quincho')     cargarQuincho();
   if (nombre === 'usuarios')    cargarUsuarios();
 }
 
@@ -3722,6 +3928,351 @@ function eliminarUsuarioActual() {
       msgEl.textContent = 'Error al eliminar: ' + e.message;
     })
     .eliminarUsuario(JSON.stringify({ email: USUARIO_SELECCIONADO }));
+}
+
+// ── Quincho ──────────────────────────────────────────────────
+var QN_ETAPAS = [];
+var QN_ETAPA_SEL = null;
+var QN_MATERIALES = [];
+var QN_PRESUPUESTO = [];
+var QN_PAGOS = [];
+var QN_FOTO_PENDIENTE = null; // { base64, mimeType } mientras hay una foto analizada sin guardar
+
+function cargarQuincho() {
+  google.script.run
+    .withSuccessHandler(function(json) {
+      QN_ETAPAS = JSON.parse(json).etapas || [];
+      renderQuinchoEtapas();
+      if (!QN_ETAPAS.length) return;
+      var sigueExistiendo = QN_ETAPAS.some(function(e) { return e.id === QN_ETAPA_SEL; });
+      seleccionarEtapaQuincho(sigueExistiendo ? QN_ETAPA_SEL : QN_ETAPAS[0].id);
+    })
+    .withFailureHandler(function(e) { console.error(e); })
+    .getQuinchoEtapas();
+}
+
+function renderQuinchoEtapas() {
+  var cont = document.getElementById('qn-etapas-list');
+  if (!QN_ETAPAS.length) { cont.innerHTML = '<div class="no-data">Todavía no hay etapas cargadas.</div>'; return; }
+  cont.innerHTML = QN_ETAPAS.map(function(e) {
+    var sel = e.id === QN_ETAPA_SEL ? ' selected' : '';
+    var saldoClass = e.saldo > 0 ? 'pos' : 'cero';
+    return '<div class="qn-etapa-item' + sel + '" onclick=\'seleccionarEtapaQuincho("' + e.id + '")\'>' +
+      '<div class="qn-etapa-nombre">' + esc(e.nombre) + '</div>' +
+      '<div class="qn-etapa-saldo ' + saldoClass + '">' + (e.saldo > 0 ? 'Falta ' + fmtARS(e.saldo) : 'Al día') + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function seleccionarEtapaQuincho(id) {
+  QN_ETAPA_SEL = id;
+  renderQuinchoEtapas();
+  var e = QN_ETAPAS.find(function(x) { return x.id === id; });
+  if (!e) return;
+
+  document.getElementById('qn-detalle-empty').style.display = 'none';
+  document.getElementById('qn-detalle-content').style.display = 'block';
+  document.getElementById('qn-etapa-titulo').textContent = e.nombre;
+  var badge = document.getElementById('qn-etapa-estado-badge');
+  badge.textContent = e.estado;
+  badge.className = 'badge ' + (e.estado === 'Terminada' ? 'b-ing' : 'b-banco-nbch');
+  document.getElementById('qn-etapa-detalle-txt').textContent =
+    [e.fecha, e.detalle].filter(function(x) { return x; }).join(' — ');
+  document.getElementById('qn-kpi-materiales').textContent  = fmtARS(e.totalMateriales);
+  document.getElementById('qn-kpi-presupuesto').textContent = fmtARS(e.totalPresupuesto);
+  document.getElementById('qn-kpi-pagado').textContent      = fmtARS(e.totalPagado);
+  document.getElementById('qn-kpi-saldo').textContent       = fmtARS(e.saldo);
+
+  cancelarFormMaterialQuincho();
+  cargarQuinchoMateriales();
+  cargarQuinchoPresupuestoPagos();
+}
+
+var QN_ETAPA_MODAL_MODO = 'crear'; // 'crear' o 'editar'
+
+function nuevaEtapaQuincho() {
+  QN_ETAPA_MODAL_MODO = 'crear';
+  document.getElementById('qn-etapa-modal-titulo').textContent = '➕ Nueva etapa';
+  document.getElementById('qne-nombre').value = '';
+  document.getElementById('qne-fecha').value = '';
+  document.getElementById('qne-detalle').value = '';
+  document.getElementById('qne-estado').value = 'En curso';
+  document.getElementById('qn-etapa-modal-msg').className = 'msg';
+  document.getElementById('qn-etapa-modal').classList.add('show');
+}
+
+function abrirModalEditarEtapaQuincho() {
+  var e = QN_ETAPAS.find(function(x) { return x.id === QN_ETAPA_SEL; });
+  if (!e) return;
+  QN_ETAPA_MODAL_MODO = 'editar';
+  document.getElementById('qn-etapa-modal-titulo').textContent = '✏️ Editar etapa';
+  document.getElementById('qne-nombre').value = e.nombre;
+  document.getElementById('qne-fecha').value = e.fecha;
+  document.getElementById('qne-detalle').value = e.detalle;
+  document.getElementById('qne-estado').value = e.estado;
+  document.getElementById('qn-etapa-modal-msg').className = 'msg';
+  document.getElementById('qn-etapa-modal').classList.add('show');
+}
+
+function cerrarModalEtapaQuincho() {
+  document.getElementById('qn-etapa-modal').classList.remove('show');
+}
+
+function guardarModalEtapaQuincho() {
+  var msgEl = document.getElementById('qn-etapa-modal-msg');
+  var nombre = document.getElementById('qne-nombre').value.trim();
+  if (!nombre) { msgEl.className = 'msg error show'; msgEl.textContent = 'El nombre es obligatorio.'; return; }
+  var datos = {
+    nombre: nombre,
+    fecha: document.getElementById('qne-fecha').value.trim(),
+    detalle: document.getElementById('qne-detalle').value.trim(),
+    estado: document.getElementById('qne-estado').value,
+  };
+  if (QN_ETAPA_MODAL_MODO === 'editar') datos.id = QN_ETAPA_SEL;
+
+  var btn = document.getElementById('qn-txt-etapa-modal');
+  document.getElementById('qn-sp-etapa-modal').classList.add('show');
+  msgEl.className = 'msg info show';
+  msgEl.textContent = 'Guardando...';
+
+  var accion = QN_ETAPA_MODAL_MODO === 'editar' ? 'editarEtapaQuincho' : 'crearEtapaQuincho';
+  google.script.run
+    .withSuccessHandler(function(json) {
+      document.getElementById('qn-sp-etapa-modal').classList.remove('show');
+      var r = JSON.parse(json);
+      if (!r.ok) { msgEl.className = 'msg error show'; msgEl.textContent = r.msg || 'Error al guardar'; return; }
+      if (r.etapa) QN_ETAPA_SEL = r.etapa.id;
+      cerrarModalEtapaQuincho();
+      cargarQuincho();
+    })
+    .withFailureHandler(function(e) {
+      document.getElementById('qn-sp-etapa-modal').classList.remove('show');
+      msgEl.className = 'msg error show';
+      msgEl.textContent = 'Error al guardar: ' + e.message;
+    })[accion](JSON.stringify(datos));
+}
+
+function mostrarSubtabQuincho(nombre) {
+  document.getElementById('qn-sub-materiales').style.display  = nombre === 'materiales'  ? 'block' : 'none';
+  document.getElementById('qn-sub-presupuesto').style.display = nombre === 'presupuesto' ? 'block' : 'none';
+  document.getElementById('qn-sub-btn-materiales').classList.toggle('active', nombre === 'materiales');
+  document.getElementById('qn-sub-btn-presupuesto').classList.toggle('active', nombre === 'presupuesto');
+}
+
+// ── Materiales ───────────────────────────────────────────────
+function cargarQuinchoMateriales() {
+  if (!QN_ETAPA_SEL) return;
+  google.script.run
+    .withSuccessHandler(function(json) {
+      QN_MATERIALES = JSON.parse(json).rows || [];
+      renderQuinchoMateriales();
+    })
+    .withFailureHandler(function(e) { console.error(e); })
+    .getQuinchoMateriales(QN_ETAPA_SEL);
+}
+
+function renderQuinchoMateriales() {
+  var body = document.getElementById('qn-materiales-body');
+  if (!QN_MATERIALES.length) { body.innerHTML = '<tr><td colspan="7" class="no-data">Sin materiales cargados en esta etapa.</td></tr>'; return; }
+  body.innerHTML = QN_MATERIALES.map(function(m) {
+    var ver = m.driveFileId ? '<a class="fac-ver" target="_blank" href="https://drive.google.com/file/d/' + m.driveFileId + '/view">👁 Ver</a>' : '';
+    return '<tr>' +
+      '<td>' + esc(m.fecha) + '</td>' +
+      '<td>' + esc(m.proveedor) + '</td>' +
+      '<td>' + esc(m.numeroFactura) + '</td>' +
+      '<td>' + esc(m.detalle) + ' ' + ver + '</td>' +
+      '<td style="text-align:right;font-weight:700">' + fmtARS(m.total) + '</td>' +
+      '<td><span class="badge b-banco-nbch">' + esc(m.origen) + '</span></td>' +
+      '<td class="qn-solo-escritura"><button class="btn btn-red" style="padding:4px 9px" onclick="eliminarMaterialQuinchoFila(' + m.fila + ')">🗑️</button></td>' +
+      '</tr>';
+  }).join('');
+}
+
+function procesarFotoMaterialQuincho(file) {
+  if (!file) return;
+  if (!/^image\//.test(file.type)) { alert('Subí una imagen (foto o captura del comprobante).'); return; }
+  var msg = document.getElementById('qn-material-analizando');
+  msg.className = 'msg info show';
+  msg.textContent = 'Analizando comprobante con IA...';
+
+  var fr = new FileReader();
+  fr.onload = function(e) {
+    var base64 = e.target.result.split(',')[1];
+    QN_FOTO_PENDIENTE = { base64: base64, mimeType: file.type };
+    google.script.run
+      .withSuccessHandler(function(json) {
+        var r = JSON.parse(json);
+        msg.className = 'msg';
+        if (!r.ok) { alert('No se pudo analizar la imagen: ' + (r.msg || '')); return; }
+        document.getElementById('qn-mat-fecha').value = r.fecha;
+        document.getElementById('qn-mat-proveedor').value = r.proveedor;
+        document.getElementById('qn-mat-numero').value = r.numeroFactura;
+        document.getElementById('qn-mat-detalle').value = r.detalle;
+        document.getElementById('qn-mat-total').value = r.total || '';
+        document.getElementById('qn-material-form').style.display = 'block';
+      })
+      .withFailureHandler(function(err) {
+        msg.className = 'msg';
+        alert('Error al analizar la imagen: ' + err.message);
+      })
+      .analizarMaterialQuincho(JSON.stringify({ base64: base64, mimeType: file.type }));
+  };
+  fr.readAsDataURL(file);
+}
+
+function abrirFormMaterialManual() {
+  QN_FOTO_PENDIENTE = null;
+  ['qn-mat-fecha', 'qn-mat-proveedor', 'qn-mat-numero', 'qn-mat-detalle', 'qn-mat-total'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('qn-material-form').style.display = 'block';
+}
+
+function cancelarFormMaterialQuincho() {
+  QN_FOTO_PENDIENTE = null;
+  document.getElementById('qn-material-form').style.display = 'none';
+  document.getElementById('qn-material-msg').className = 'msg';
+  document.getElementById('qn-file-material').value = '';
+}
+
+function guardarMaterialQuinchoForm() {
+  var msgEl = document.getElementById('qn-material-msg');
+  var fecha = document.getElementById('qn-mat-fecha').value.trim();
+  var total = parseFloat(document.getElementById('qn-mat-total').value);
+  if (!fecha || !total) { msgEl.className = 'msg error show'; msgEl.textContent = 'Fecha y total son obligatorios.'; return; }
+
+  var body = {
+    etapaId: QN_ETAPA_SEL, fecha: fecha,
+    proveedor: document.getElementById('qn-mat-proveedor').value.trim(),
+    numeroFactura: document.getElementById('qn-mat-numero').value.trim(),
+    detalle: document.getElementById('qn-mat-detalle').value.trim(),
+    total: total,
+  };
+  if (QN_FOTO_PENDIENTE) { body.base64 = QN_FOTO_PENDIENTE.base64; body.mimeType = QN_FOTO_PENDIENTE.mimeType; }
+
+  var btn = document.getElementById('qn-btn-guardar-material');
+  btn.disabled = true;
+  document.getElementById('qn-sp-guardar-material').classList.add('show');
+  msgEl.className = 'msg info show';
+  msgEl.textContent = 'Guardando...';
+
+  google.script.run
+    .withSuccessHandler(function(json) {
+      btn.disabled = false;
+      document.getElementById('qn-sp-guardar-material').classList.remove('show');
+      var r = JSON.parse(json);
+      if (!r.ok) { msgEl.className = 'msg error show'; msgEl.textContent = r.msg || 'Error al guardar'; return; }
+      cancelarFormMaterialQuincho();
+      cargarQuinchoMateriales();
+      cargarQuincho(); // refresca los totales de la etapa
+    })
+    .withFailureHandler(function(e) {
+      btn.disabled = false;
+      document.getElementById('qn-sp-guardar-material').classList.remove('show');
+      msgEl.className = 'msg error show';
+      msgEl.textContent = 'Error al guardar: ' + e.message;
+    })
+    .guardarMaterialQuincho(JSON.stringify(body));
+}
+
+function eliminarMaterialQuinchoFila(fila) {
+  if (!confirm('¿Eliminar este material?')) return;
+  google.script.run
+    .withSuccessHandler(function() { cargarQuinchoMateriales(); cargarQuincho(); })
+    .withFailureHandler(function(e) { alert('Error al eliminar: ' + e.message); })
+    .eliminarMaterialQuincho(fila);
+}
+
+// ── Presupuesto y Pagos ──────────────────────────────────────
+function cargarQuinchoPresupuestoPagos() {
+  if (!QN_ETAPA_SEL) return;
+  google.script.run
+    .withSuccessHandler(function(json) { QN_PRESUPUESTO = JSON.parse(json).rows || []; renderQuinchoPresupuesto(); })
+    .withFailureHandler(function(e) { console.error(e); })
+    .getQuinchoPresupuesto(QN_ETAPA_SEL);
+  google.script.run
+    .withSuccessHandler(function(json) { QN_PAGOS = JSON.parse(json).rows || []; renderQuinchoPagos(); })
+    .withFailureHandler(function(e) { console.error(e); })
+    .getQuinchoPagos(QN_ETAPA_SEL);
+}
+
+function renderQuinchoPresupuesto() {
+  var body = document.getElementById('qn-presupuesto-body');
+  if (!QN_PRESUPUESTO.length) { body.innerHTML = '<tr><td colspan="4" class="no-data">Sin ítems de presupuesto.</td></tr>'; return; }
+  body.innerHTML = QN_PRESUPUESTO.map(function(p) {
+    return '<tr><td>' + esc(p.fecha) + '</td><td>' + esc(p.detalle) + '</td>' +
+      '<td style="text-align:right;font-weight:700">' + fmtARS(p.monto) + '</td>' +
+      '<td class="qn-solo-escritura"><button class="btn btn-red" style="padding:4px 9px" onclick="eliminarPresupuestoQuinchoFila(' + p.fila + ')">🗑️</button></td></tr>';
+  }).join('');
+}
+
+function renderQuinchoPagos() {
+  var body = document.getElementById('qn-pagos-body');
+  if (!QN_PAGOS.length) { body.innerHTML = '<tr><td colspan="5" class="no-data">Sin pagos cargados.</td></tr>'; return; }
+  body.innerHTML = QN_PAGOS.map(function(p) {
+    return '<tr><td>' + esc(p.fecha) + '</td><td>' + esc(p.mes) + '</td><td>' + esc(p.detalle) + '</td>' +
+      '<td style="text-align:right;font-weight:700">' + fmtARS(p.monto) + '</td>' +
+      '<td class="qn-solo-escritura"><button class="btn btn-red" style="padding:4px 9px" onclick="eliminarPagoQuinchoFila(' + p.fila + ')">🗑️</button></td></tr>';
+  }).join('');
+}
+
+function agregarPresupuestoQuinchoForm() {
+  var msgEl = document.getElementById('qn-pre-msg');
+  var detalle = document.getElementById('qn-pre-detalle').value.trim();
+  var monto = parseFloat(document.getElementById('qn-pre-monto').value);
+  if (!detalle || !monto) { msgEl.className = 'msg error show'; msgEl.textContent = 'Detalle y monto son obligatorios.'; return; }
+  var body = { etapaId: QN_ETAPA_SEL, fecha: document.getElementById('qn-pre-fecha').value.trim(), detalle: detalle, monto: monto };
+  google.script.run
+    .withSuccessHandler(function(json) {
+      var r = JSON.parse(json);
+      if (!r.ok) { msgEl.className = 'msg error show'; msgEl.textContent = r.msg || 'Error al guardar'; return; }
+      msgEl.className = 'msg';
+      ['qn-pre-fecha', 'qn-pre-detalle', 'qn-pre-monto'].forEach(function(id) { document.getElementById(id).value = ''; });
+      cargarQuinchoPresupuestoPagos();
+      cargarQuincho();
+    })
+    .withFailureHandler(function(e) { msgEl.className = 'msg error show'; msgEl.textContent = 'Error: ' + e.message; })
+    .agregarPresupuestoQuincho(JSON.stringify(body));
+}
+
+function eliminarPresupuestoQuinchoFila(fila) {
+  if (!confirm('¿Eliminar este ítem de presupuesto?')) return;
+  google.script.run
+    .withSuccessHandler(function() { cargarQuinchoPresupuestoPagos(); cargarQuincho(); })
+    .withFailureHandler(function(e) { alert('Error al eliminar: ' + e.message); })
+    .eliminarPresupuestoQuincho(fila);
+}
+
+function agregarPagoQuinchoForm() {
+  var msgEl = document.getElementById('qn-pag-msg');
+  var fecha = document.getElementById('qn-pag-fecha').value.trim();
+  var monto = parseFloat(document.getElementById('qn-pag-monto').value);
+  if (!fecha || !monto) { msgEl.className = 'msg error show'; msgEl.textContent = 'Fecha y monto son obligatorios.'; return; }
+  var body = {
+    etapaId: QN_ETAPA_SEL, fecha: fecha,
+    mes: document.getElementById('qn-pag-mes').value.trim(),
+    detalle: document.getElementById('qn-pag-detalle').value.trim(),
+    monto: monto,
+  };
+  google.script.run
+    .withSuccessHandler(function(json) {
+      var r = JSON.parse(json);
+      if (!r.ok) { msgEl.className = 'msg error show'; msgEl.textContent = r.msg || 'Error al guardar'; return; }
+      msgEl.className = 'msg';
+      ['qn-pag-fecha', 'qn-pag-mes', 'qn-pag-detalle', 'qn-pag-monto'].forEach(function(id) { document.getElementById(id).value = ''; });
+      cargarQuinchoPresupuestoPagos();
+      cargarQuincho();
+    })
+    .withFailureHandler(function(e) { msgEl.className = 'msg error show'; msgEl.textContent = 'Error: ' + e.message; })
+    .agregarPagoQuincho(JSON.stringify(body));
+}
+
+function eliminarPagoQuinchoFila(fila) {
+  if (!confirm('¿Eliminar este pago?')) return;
+  google.script.run
+    .withSuccessHandler(function() { cargarQuinchoPresupuestoPagos(); cargarQuincho(); })
+    .withFailureHandler(function(e) { alert('Error al eliminar: ' + e.message); })
+    .eliminarPagoQuincho(fila);
 }
 </script>
 </body>

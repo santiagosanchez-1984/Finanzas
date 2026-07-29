@@ -30,8 +30,28 @@ module.exports = async function(req, res) {
       return res.end();
     }
 
+    // Autorizacion UNICA (manual, para el admin) que le pide a Drive permiso
+    // de escritura sobre la cuenta personal de Google y devuelve un refresh
+    // token para pegar en GOOGLE_DRIVE_REFRESH_TOKEN. Necesario porque los
+    // service accounts no tienen cuota de almacenamiento propia y no pueden
+    // crear archivos nuevos (ver modulo Quincho) — subiendo con este refresh
+    // token, el archivo cuenta contra la cuota personal del usuario.
+    if (action === 'drive-start') {
+      const params = new URLSearchParams({
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        redirect_uri: redirectUri,
+        response_type: 'code',
+        scope: 'https://www.googleapis.com/auth/drive',
+        access_type: 'offline',
+        prompt: 'consent',
+        state: 'drive',
+      });
+      res.writeHead(302, { Location: 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString() });
+      return res.end();
+    }
+
     if (action === 'callback') {
-      const { code, error } = req.query || {};
+      const { code, error, state } = req.query || {};
       if (error || !code) {
         res.writeHead(302, { Location: '/?error=google_cancelado' });
         return res.end();
@@ -49,6 +69,20 @@ module.exports = async function(req, res) {
         }),
       });
       const tokenData = await tokenRes.json();
+
+      if (state === 'drive') {
+        if (!tokenRes.ok || !tokenData.refresh_token) {
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send('<p>No se recibió refresh_token. Revocá el acceso previo de esta app en ' +
+            '<a href="https://myaccount.google.com/permissions" target="_blank">myaccount.google.com/permissions</a> ' +
+            'y probá de nuevo (Google solo lo manda la primera vez que se autoriza).</p><pre>' +
+            JSON.stringify(tokenData, null, 2) + '</pre>');
+        }
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.send('<p>✓ Listo. Copiá este valor en <code>GOOGLE_DRIVE_REFRESH_TOKEN</code> (.env y Vercel):</p>' +
+          '<textarea style="width:100%;height:80px">' + tokenData.refresh_token + '</textarea>');
+      }
+
       if (!tokenRes.ok || !tokenData.id_token) {
         res.writeHead(302, { Location: '/?error=google_token' });
         return res.end();

@@ -5,6 +5,7 @@
     { "source": "/", "destination": "/api/index" }
   ],
   "functions": {
-    "api/facturas.js": { "maxDuration": 60 }
+    "api/facturas.js": { "maxDuration": 60 },
+    "api/quincho.js": { "maxDuration": 30 }
   }
 }
