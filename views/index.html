@@ -159,11 +159,9 @@ body.fac-sin-escritura .fac-dup-row .btn-red { display: none; }
 .qn-subtabs { display: flex; gap: 8px; margin-bottom: 14px; }
 .qn-subtab-btn { background: #e8eef5; color: #444; }
 .qn-subtab-btn.active { background: #0A3560; color: #fff; }
-.qn-pres-pagos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !important; }
 @media (max-width: 900px) {
   .qn-layout { grid-template-columns: 1fr; }
-  .qn-pres-pagos-grid { grid-template-columns: 1fr; }
 }
 
 /* ── Modal editar factura ── */
@@ -956,7 +954,8 @@ body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !impo
 
           <div class="qn-subtabs">
             <button class="btn qn-subtab-btn active" id="qn-sub-btn-materiales" onclick="mostrarSubtabQuincho('materiales')">📦 Materiales</button>
-            <button class="btn qn-subtab-btn" id="qn-sub-btn-presupuesto" onclick="mostrarSubtabQuincho('presupuesto')">💵 Presupuesto y Pagos</button>
+            <button class="btn qn-subtab-btn" id="qn-sub-btn-presupuesto" onclick="mostrarSubtabQuincho('presupuesto')">📐 Presupuesto</button>
+            <button class="btn qn-subtab-btn" id="qn-sub-btn-pagos" onclick="mostrarSubtabQuincho('pagos')">💳 Pagos</button>
           </div>
 
           <!-- Materiales -->
@@ -969,7 +968,7 @@ body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !impo
                 <input type="file" id="qn-file-material" accept="image/*" capture="environment" onchange="procesarFotoMaterialQuincho(this.files[0])">
                 <div class="dz-icon">📷</div>
                 <div class="dz-title">Subir foto de la compra</div>
-                <div class="dz-sub">Se analiza automáticamente con IA (fecha, proveedor, número de factura, detalle, total) y se guarda en Drive</div>
+                <div class="dz-sub">Se analiza automáticamente con IA (fecha, proveedor, número de factura, ítems) y se guarda en Drive</div>
               </div>
               <div id="qn-material-analizando" class="msg info"></div>
               <div style="text-align:center;margin-top:10px">
@@ -978,12 +977,23 @@ body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !impo
 
               <div id="qn-material-form" style="display:none;margin-top:16px;border-top:1px solid #e8eef5;padding-top:16px">
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-                  <div class="f-item"><label>Fecha</label><input type="text" id="qn-mat-fecha" placeholder="dd/mm/aaaa"></div>
+                  <div class="f-item"><label>Fecha</label><input type="date" id="qn-mat-fecha"></div>
                   <div class="f-item"><label>Proveedor</label><input type="text" id="qn-mat-proveedor"></div>
                   <div class="f-item"><label>Nro. Factura</label><input type="text" id="qn-mat-numero"></div>
-                  <div class="f-item" style="grid-column:span 2"><label>Detalle</label><input type="text" id="qn-mat-detalle"></div>
-                  <div class="f-item"><label>Total</label><input type="number" step="0.01" id="qn-mat-total"></div>
                 </div>
+
+                <div style="margin-top:14px">
+                  <div class="tabla-wrap">
+                    <table><thead><tr>
+                      <th>Detalle</th><th style="width:110px">Cantidad</th><th style="width:130px;text-align:right">Total</th><th></th>
+                    </tr></thead><tbody id="qn-mat-items-body"></tbody></table>
+                  </div>
+                  <button class="btn btn-gray" style="margin-top:8px" onclick="agregarFilaMatItemQuincho()">➕ Agregar ítem</button>
+                </div>
+
+                <div style="margin-top:12px;font-size:13px">Subtotal (suma de ítems): <b id="qn-mat-subtotal">$0</b></div>
+                <div id="qn-mat-total-aviso" class="dz-err" style="display:none;margin-top:6px;font-size:12.5px"></div>
+
                 <div style="display:flex;gap:10px;align-items:center;margin-top:14px">
                   <button class="btn btn-primary" id="qn-btn-guardar-material" onclick="guardarMaterialQuinchoForm()">
                     <span class="spinner" id="qn-sp-guardar-material"></span>
@@ -999,44 +1009,46 @@ body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !impo
               <h3>📋 Materiales cargados</h3>
               <div class="tabla-scroll tabla-wrap">
                 <table><thead><tr>
-                  <th>Fecha</th><th>Proveedor</th><th>Nro. Factura</th><th>Detalle</th><th style="text-align:right">Total</th><th>Origen</th><th></th>
+                  <th>Fecha</th><th>Proveedor</th><th>Nro. Factura</th><th>Detalle</th><th>Cantidad</th><th style="text-align:right">Total</th><th>Origen</th><th></th>
                 </tr></thead><tbody id="qn-materiales-body"></tbody></table>
               </div>
             </div>
           </div>
 
-          <!-- Presupuesto y Pagos -->
+          <!-- Presupuesto -->
           <div id="qn-sub-presupuesto" style="display:none">
-            <div class="qn-pres-pagos-grid">
-              <div class="card">
-                <h3>📐 Presupuesto</h3>
-                <div class="qn-solo-escritura" style="display:grid;grid-template-columns:1fr 2fr 1fr auto auto;gap:8px;margin-bottom:14px;align-items:end">
-                  <div class="f-item"><label>Fecha</label><input type="text" id="qn-pre-fecha" placeholder="dd/mm/aaaa"></div>
-                  <div class="f-item"><label>Detalle</label><input type="text" id="qn-pre-detalle"></div>
-                  <div class="f-item"><label>Monto</label><input type="number" step="0.01" id="qn-pre-monto"></div>
-                  <button class="btn btn-primary" id="qn-pre-btn-guardar" onclick="guardarPresupuestoQuinchoForm()">➕</button>
-                  <button class="btn btn-gray" id="qn-pre-btn-cancelar" onclick="cancelarEdicionPresupuestoQuincho()" style="display:none">✕</button>
-                </div>
-                <div id="qn-pre-msg" class="msg"></div>
-                <div class="tabla-scroll tabla-wrap">
-                  <table><thead><tr><th>Fecha</th><th>Detalle</th><th style="text-align:right">Monto</th><th></th></tr></thead>
-                  <tbody id="qn-presupuesto-body"></tbody></table>
-                </div>
+            <div class="card">
+              <h3>📐 Presupuesto</h3>
+              <div class="qn-solo-escritura" style="display:grid;grid-template-columns:1fr 2fr 1fr auto auto;gap:8px;margin-bottom:14px;align-items:end">
+                <div class="f-item"><label>Fecha</label><input type="date" id="qn-pre-fecha"></div>
+                <div class="f-item"><label>Detalle</label><input type="text" id="qn-pre-detalle"></div>
+                <div class="f-item"><label>Monto</label><input type="number" step="0.01" id="qn-pre-monto"></div>
+                <button class="btn btn-primary" id="qn-pre-btn-guardar" onclick="guardarPresupuestoQuinchoForm()">➕</button>
+                <button class="btn btn-gray" id="qn-pre-btn-cancelar" onclick="cancelarEdicionPresupuestoQuincho()" style="display:none">✕</button>
               </div>
-              <div class="card">
-                <h3>💳 Pagos</h3>
-                <div class="qn-solo-escritura" style="display:grid;grid-template-columns:1fr 1fr 2fr 1fr auto;gap:8px;margin-bottom:14px;align-items:end">
-                  <div class="f-item"><label>Fecha</label><input type="text" id="qn-pag-fecha" placeholder="dd/mm/aaaa"></div>
-                  <div class="f-item"><label>Mes</label><input type="text" id="qn-pag-mes" placeholder="Marzo"></div>
-                  <div class="f-item"><label>Detalle</label><input type="text" id="qn-pag-detalle"></div>
-                  <div class="f-item"><label>Monto</label><input type="number" step="0.01" id="qn-pag-monto"></div>
-                  <button class="btn btn-primary" onclick="agregarPagoQuinchoForm()">➕</button>
-                </div>
-                <div id="qn-pag-msg" class="msg"></div>
-                <div class="tabla-scroll tabla-wrap">
-                  <table><thead><tr><th>Fecha</th><th>Mes</th><th>Detalle</th><th style="text-align:right">Monto</th><th></th></tr></thead>
-                  <tbody id="qn-pagos-body"></tbody></table>
-                </div>
+              <div id="qn-pre-msg" class="msg"></div>
+              <div class="tabla-scroll tabla-wrap">
+                <table><thead><tr><th>Fecha</th><th>Detalle</th><th style="text-align:right">Monto</th><th></th></tr></thead>
+                <tbody id="qn-presupuesto-body"></tbody></table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pagos -->
+          <div id="qn-sub-pagos" style="display:none">
+            <div class="card">
+              <h3>💳 Pagos</h3>
+              <div class="qn-solo-escritura" style="display:grid;grid-template-columns:1fr 1fr 2fr 1fr auto;gap:8px;margin-bottom:14px;align-items:end">
+                <div class="f-item"><label>Fecha</label><input type="date" id="qn-pag-fecha"></div>
+                <div class="f-item"><label>Mes</label><input type="text" id="qn-pag-mes" placeholder="Marzo"></div>
+                <div class="f-item"><label>Detalle</label><input type="text" id="qn-pag-detalle"></div>
+                <div class="f-item"><label>Monto</label><input type="number" step="0.01" id="qn-pag-monto"></div>
+                <button class="btn btn-primary" onclick="agregarPagoQuinchoForm()">➕</button>
+              </div>
+              <div id="qn-pag-msg" class="msg"></div>
+              <div class="tabla-scroll tabla-wrap">
+                <table><thead><tr><th>Fecha</th><th>Mes</th><th>Detalle</th><th style="text-align:right">Monto</th><th></th></tr></thead>
+                <tbody id="qn-pagos-body"></tbody></table>
               </div>
             </div>
           </div>
@@ -1091,7 +1103,7 @@ body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !impo
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div class="f-item" style="grid-column:1 / -1"><label>Nombre</label><input type="text" id="qne-nombre" placeholder="ej. Etapa 7 - Deck"></div>
-      <div class="f-item"><label>Fecha</label><input type="text" id="qne-fecha" placeholder="dd/mm/aaaa"></div>
+      <div class="f-item"><label>Fecha</label><input type="date" id="qne-fecha"></div>
       <div class="f-item"><label>Estado</label>
         <select id="qne-estado"><option value="En curso">En curso</option><option value="Terminada">Terminada</option></select>
       </div>
@@ -4012,7 +4024,7 @@ function abrirModalEditarEtapaQuincho() {
   QN_ETAPA_MODAL_MODO = 'editar';
   document.getElementById('qn-etapa-modal-titulo').textContent = '✏️ Editar etapa';
   document.getElementById('qne-nombre').value = e.nombre;
-  document.getElementById('qne-fecha').value = e.fecha;
+  document.getElementById('qne-fecha').value = fechaDDMMYYYYaISO(e.fecha);
   document.getElementById('qne-detalle').value = e.detalle;
   document.getElementById('qne-estado').value = e.estado;
   document.getElementById('qn-etapa-modal-msg').className = 'msg';
@@ -4029,7 +4041,7 @@ function guardarModalEtapaQuincho() {
   if (!nombre) { msgEl.className = 'msg error show'; msgEl.textContent = 'El nombre es obligatorio.'; return; }
   var datos = {
     nombre: nombre,
-    fecha: document.getElementById('qne-fecha').value.trim(),
+    fecha: fechaISOaDDMMYYYY(document.getElementById('qne-fecha').value),
     detalle: document.getElementById('qne-detalle').value.trim(),
     estado: document.getElementById('qne-estado').value,
   };
@@ -4060,11 +4072,30 @@ function guardarModalEtapaQuincho() {
 function mostrarSubtabQuincho(nombre) {
   document.getElementById('qn-sub-materiales').style.display  = nombre === 'materiales'  ? 'block' : 'none';
   document.getElementById('qn-sub-presupuesto').style.display = nombre === 'presupuesto' ? 'block' : 'none';
+  document.getElementById('qn-sub-pagos').style.display       = nombre === 'pagos'       ? 'block' : 'none';
   document.getElementById('qn-sub-btn-materiales').classList.toggle('active', nombre === 'materiales');
   document.getElementById('qn-sub-btn-presupuesto').classList.toggle('active', nombre === 'presupuesto');
+  document.getElementById('qn-sub-btn-pagos').classList.toggle('active', nombre === 'pagos');
+}
+
+// ── Fechas: los inputs son type=date (ISO yyyy-mm-dd); el resto de la app
+// (y la planilla) usa dd/mm/aaaa, asi que se convierte en el borde. ──
+function fechaISOaDDMMYYYY(iso) {
+  if (!iso) return '';
+  var p = iso.split('-');
+  if (p.length !== 3) return '';
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+function fechaDDMMYYYYaISO(f) {
+  if (!f) return '';
+  var m = String(f).trim().match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (!m) return '';
+  return m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
 }
 
 // ── Materiales ───────────────────────────────────────────────
+var QN_MAT_TOTAL_COMPROBANTE = 0;
+
 function cargarQuinchoMateriales() {
   if (!QN_ETAPA_SEL) return;
   google.script.run
@@ -4078,7 +4109,7 @@ function cargarQuinchoMateriales() {
 
 function renderQuinchoMateriales() {
   var body = document.getElementById('qn-materiales-body');
-  if (!QN_MATERIALES.length) { body.innerHTML = '<tr><td colspan="7" class="no-data">Sin materiales cargados en esta etapa.</td></tr>'; return; }
+  if (!QN_MATERIALES.length) { body.innerHTML = '<tr><td colspan="8" class="no-data">Sin materiales cargados en esta etapa.</td></tr>'; return; }
   body.innerHTML = QN_MATERIALES.map(function(m) {
     var ver = m.driveFileId ? '<a class="fac-ver" target="_blank" href="https://drive.google.com/file/d/' + m.driveFileId + '/view">👁 Ver</a>' : '';
     return '<tr>' +
@@ -4086,6 +4117,7 @@ function renderQuinchoMateriales() {
       '<td>' + esc(m.proveedor) + '</td>' +
       '<td>' + esc(m.numeroFactura) + '</td>' +
       '<td>' + esc(m.detalle) + ' ' + ver + '</td>' +
+      '<td>' + esc(m.cantidad) + '</td>' +
       '<td style="text-align:right;font-weight:700">' + fmtARS(m.total) + '</td>' +
       '<td><span class="badge b-banco-nbch">' + esc(m.origen) + '</span></td>' +
       '<td class="qn-solo-escritura"><button class="btn btn-red" style="padding:4px 9px" onclick="eliminarMaterialQuinchoFila(' + m.fila + ')">🗑️</button></td>' +
@@ -4109,11 +4141,11 @@ function procesarFotoMaterialQuincho(file) {
         var r = JSON.parse(json);
         msg.className = 'msg';
         if (!r.ok) { alert('No se pudo analizar la imagen: ' + (r.msg || '')); return; }
-        document.getElementById('qn-mat-fecha').value = r.fecha;
+        document.getElementById('qn-mat-fecha').value = fechaDDMMYYYYaISO(r.fecha);
         document.getElementById('qn-mat-proveedor').value = r.proveedor;
         document.getElementById('qn-mat-numero').value = r.numeroFactura;
-        document.getElementById('qn-mat-detalle').value = r.detalle;
-        document.getElementById('qn-mat-total').value = r.total || '';
+        QN_MAT_TOTAL_COMPROBANTE = r.total || 0;
+        renderMatItemsTableQuincho(r.items);
         document.getElementById('qn-material-form').style.display = 'block';
       })
       .withFailureHandler(function(err) {
@@ -4127,9 +4159,11 @@ function procesarFotoMaterialQuincho(file) {
 
 function abrirFormMaterialManual() {
   QN_FOTO_PENDIENTE = null;
-  ['qn-mat-fecha', 'qn-mat-proveedor', 'qn-mat-numero', 'qn-mat-detalle', 'qn-mat-total'].forEach(function(id) {
-    document.getElementById(id).value = '';
-  });
+  QN_MAT_TOTAL_COMPROBANTE = 0;
+  document.getElementById('qn-mat-fecha').value = '';
+  document.getElementById('qn-mat-proveedor').value = '';
+  document.getElementById('qn-mat-numero').value = '';
+  renderMatItemsTableQuincho([]);
   document.getElementById('qn-material-form').style.display = 'block';
 }
 
@@ -4138,20 +4172,62 @@ function cancelarFormMaterialQuincho() {
   document.getElementById('qn-material-form').style.display = 'none';
   document.getElementById('qn-material-msg').className = 'msg';
   document.getElementById('qn-file-material').value = '';
+  document.getElementById('qn-mat-items-body').innerHTML = '';
+}
+
+// Tabla de items editable: uno por producto de la compra (detalle, cantidad,
+// total de esa linea). El "Subtotal" es la suma de esas filas; se compara
+// contra el total impreso del comprobante (si vino de una foto) solo como
+// aviso, no se guarda por separado — lo que se persiste son los items.
+function renderMatItemsTableQuincho(items) {
+  document.getElementById('qn-mat-items-body').innerHTML = '';
+  (items && items.length ? items : [{ detalle: '', cantidad: '', total: '' }]).forEach(agregarFilaMatItemQuincho);
+  recalcularSubtotalMatItemsQuincho();
+}
+
+function agregarFilaMatItemQuincho(it) {
+  it = it || { detalle: '', cantidad: '', total: '' };
+  var tr = document.createElement('tr');
+  tr.innerHTML =
+    '<td><input type="text" class="qn-mat-item-detalle" value="' + esc(it.detalle) + '"></td>' +
+    '<td><input type="text" class="qn-mat-item-cantidad" value="' + esc(it.cantidad) + '"></td>' +
+    '<td><input type="number" step="0.01" class="qn-mat-item-total" style="text-align:right" value="' + esc(it.total) + '" oninput="recalcularSubtotalMatItemsQuincho()"></td>' +
+    '<td><button class="btn btn-red" style="padding:4px 9px" onclick="this.closest(\'tr\').remove();recalcularSubtotalMatItemsQuincho()">🗑️</button></td>';
+  document.getElementById('qn-mat-items-body').appendChild(tr);
+}
+
+function recalcularSubtotalMatItemsQuincho() {
+  var subtotal = 0;
+  document.querySelectorAll('#qn-mat-items-body .qn-mat-item-total').forEach(function(inp) { subtotal += parseFloat(inp.value) || 0; });
+  document.getElementById('qn-mat-subtotal').textContent = fmtARS(subtotal);
+  var aviso = document.getElementById('qn-mat-total-aviso');
+  if (QN_MAT_TOTAL_COMPROBANTE && Math.abs(subtotal - QN_MAT_TOTAL_COMPROBANTE) >= 1) {
+    aviso.textContent = '⚠️ El total del comprobante (' + fmtARS(QN_MAT_TOTAL_COMPROBANTE) + ') no coincide con la suma de los ítems — revisá los montos.';
+    aviso.style.display = '';
+  } else {
+    aviso.style.display = 'none';
+  }
 }
 
 function guardarMaterialQuinchoForm() {
   var msgEl = document.getElementById('qn-material-msg');
-  var fecha = document.getElementById('qn-mat-fecha').value.trim();
-  var total = parseFloat(document.getElementById('qn-mat-total').value);
-  if (!fecha || !total) { msgEl.className = 'msg error show'; msgEl.textContent = 'Fecha y total son obligatorios.'; return; }
+  var fecha = fechaISOaDDMMYYYY(document.getElementById('qn-mat-fecha').value);
+  if (!fecha) { msgEl.className = 'msg error show'; msgEl.textContent = 'La fecha es obligatoria.'; return; }
+
+  var items = [];
+  document.querySelectorAll('#qn-mat-items-body tr').forEach(function(tr) {
+    var detalle = tr.querySelector('.qn-mat-item-detalle').value.trim();
+    var cantidad = tr.querySelector('.qn-mat-item-cantidad').value.trim();
+    var total = parseFloat(tr.querySelector('.qn-mat-item-total').value);
+    if (detalle && total) items.push({ detalle: detalle, cantidad: cantidad, total: total });
+  });
+  if (!items.length) { msgEl.className = 'msg error show'; msgEl.textContent = 'Agregá al menos un ítem con detalle y total.'; return; }
 
   var body = {
     etapaId: QN_ETAPA_SEL, fecha: fecha,
     proveedor: document.getElementById('qn-mat-proveedor').value.trim(),
     numeroFactura: document.getElementById('qn-mat-numero').value.trim(),
-    detalle: document.getElementById('qn-mat-detalle').value.trim(),
-    total: total,
+    items: items,
   };
   if (QN_FOTO_PENDIENTE) { body.base64 = QN_FOTO_PENDIENTE.base64; body.mimeType = QN_FOTO_PENDIENTE.mimeType; }
 
@@ -4230,7 +4306,7 @@ function guardarPresupuestoQuinchoForm() {
   var detalle = document.getElementById('qn-pre-detalle').value.trim();
   var monto = parseFloat(document.getElementById('qn-pre-monto').value);
   if (!detalle || !monto) { msgEl.className = 'msg error show'; msgEl.textContent = 'Detalle y monto son obligatorios.'; return; }
-  var fecha = document.getElementById('qn-pre-fecha').value.trim();
+  var fecha = fechaISOaDDMMYYYY(document.getElementById('qn-pre-fecha').value);
 
   var editando = !!QN_PRESUPUESTO_EDIT_FILA;
   var body = editando
@@ -4254,7 +4330,7 @@ function editarPresupuestoQuinchoFila(fila) {
   var p = QN_PRESUPUESTO.find(function(x) { return x.fila === fila; });
   if (!p) return;
   QN_PRESUPUESTO_EDIT_FILA = fila;
-  document.getElementById('qn-pre-fecha').value = p.fecha;
+  document.getElementById('qn-pre-fecha').value = fechaDDMMYYYYaISO(p.fecha);
   document.getElementById('qn-pre-detalle').value = p.detalle;
   document.getElementById('qn-pre-monto').value = p.monto;
   document.getElementById('qn-pre-btn-guardar').textContent = '💾';
@@ -4279,7 +4355,7 @@ function eliminarPresupuestoQuinchoFila(fila) {
 
 function agregarPagoQuinchoForm() {
   var msgEl = document.getElementById('qn-pag-msg');
-  var fecha = document.getElementById('qn-pag-fecha').value.trim();
+  var fecha = fechaISOaDDMMYYYY(document.getElementById('qn-pag-fecha').value);
   var monto = parseFloat(document.getElementById('qn-pag-monto').value);
   if (!fecha || !monto) { msgEl.className = 'msg error show'; msgEl.textContent = 'Fecha y monto son obligatorios.'; return; }
   var body = {

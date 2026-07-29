@@ -129,16 +129,25 @@ async function accionMaterialesAnalizar(req, res) {
   const { base64, mimeType } = req.body || {};
   if (!base64 || !mimeType) return res.json({ ok: false, msg: 'Falta la imagen' });
   const datos = await analizarMaterialConGemini(base64, mimeType);
+  const items = (Array.isArray(datos.items) ? datos.items : []).map(it => ({
+    detalle: it.detalle || '', cantidad: it.cantidad || '', total: it.total || 0,
+  }));
   res.json({
     ok: true,
     fecha: datos.fecha || '', proveedor: datos.proveedor || '', numeroFactura: datos.numeroFactura || '',
-    detalle: datos.detalle || '', total: datos.total || 0,
+    total: datos.total || 0, items,
   });
 }
 
+// Guarda un item por fila (detalle/cantidad/total propios), todos con el
+// mismo EtapaID/Fecha/Proveedor/NumeroFactura/DriveFileId (una compra puede
+// tener varios items, pero es una sola foto/comprobante).
 async function accionMaterialesGuardar(req, res, sheets) {
-  const { etapaId, fecha, proveedor, numeroFactura, detalle, total, base64, mimeType } = req.body || {};
-  if (!etapaId || !fecha || !total) return res.json({ ok: false, msg: 'Faltan datos obligatorios' });
+  const { etapaId, fecha, proveedor, numeroFactura, items, base64, mimeType } = req.body || {};
+  const itemsValidos = (items || []).filter(it => it && it.detalle && it.total);
+  if (!etapaId || !fecha || !itemsValidos.length) {
+    return res.json({ ok: false, msg: 'Faltan datos obligatorios (fecha y al menos un ítem con detalle y total)' });
+  }
 
   await ensureSheetExists(sheets, QUINCHO_SHEET_ID, SHEET_MATERIALES, HEADER_MATERIALES);
 
@@ -162,18 +171,20 @@ async function accionMaterialesGuardar(req, res, sheets) {
   const ahora = new Date();
   const fechaCarga = String(ahora.getDate()).padStart(2, '0') + '/' + String(ahora.getMonth() + 1).padStart(2, '0') + '/' + ahora.getFullYear();
 
+  const filas = itemsValidos.map(it => [
+    etapaId, fecha, proveedor || '', numeroFactura || '', it.detalle, it.total,
+    driveFileId, driveFileName, origen, fechaCarga, it.cantidad || '',
+  ]);
+
   await sheets.spreadsheets.values.append({
     spreadsheetId: QUINCHO_SHEET_ID,
-    range: `'${SHEET_MATERIALES}'!A:J`,
+    range: `'${SHEET_MATERIALES}'!A:K`,
     valueInputOption: 'RAW',
     insertDataOption: 'INSERT_ROWS',
-    requestBody: { values: [[
-      etapaId, fecha || '', proveedor || '', numeroFactura || '', detalle || '', total || 0,
-      driveFileId, driveFileName, origen, fechaCarga,
-    ]] },
+    requestBody: { values: filas },
   });
 
-  res.json({ ok: true });
+  res.json({ ok: true, itemsGuardados: filas.length });
 }
 
 async function accionPresupuesto(req, res, sheets) {
