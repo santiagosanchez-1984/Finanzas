@@ -929,10 +929,44 @@ body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !impo
     </div>
     <div class="qn-layout">
       <div>
+        <div class="qn-etapa-item" id="qn-indicadores-btn" onclick="mostrarIndicadoresQuincho()" style="margin-bottom:10px;border-bottom:2px solid #e8eef5;border-radius:8px">
+          <div class="qn-etapa-nombre">📊 Indicadores</div>
+          <div class="qn-etapa-saldo">Resumen general</div>
+        </div>
         <div id="qn-etapas-list" class="qn-etapas"><div class="no-data">Cargando...</div></div>
       </div>
       <div id="qn-detalle">
         <div id="qn-detalle-empty" class="card" style="background:#f8f9fa;color:#999;font-size:13px">👈 Elegí una etapa de la lista.</div>
+
+        <!-- Indicadores (resumen de todas las etapas) -->
+        <div id="qn-indicadores-content" style="display:none">
+          <div class="kpi-grid">
+            <div class="kpi-card bal"><div class="kpi-label">Total Materiales</div><div class="kpi-val bal-pos" id="qn-ind-materiales">–</div></div>
+            <div class="kpi-card aho"><div class="kpi-label">Total Mano de Obra</div><div class="kpi-val aho" id="qn-ind-manoobra">–</div></div>
+            <div class="kpi-card egr"><div class="kpi-label">Total gastado</div><div class="kpi-val egr" id="qn-ind-total">–</div></div>
+            <div class="kpi-card ing"><div class="kpi-label">Presupuestado (mano de obra)</div><div class="kpi-val ing" id="qn-ind-presupuesto">–</div></div>
+          </div>
+          <div class="card" style="margin-bottom:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <h3 style="margin:0">Falta pagar (mano de obra)</h3>
+              <div style="font-size:22px;font-weight:900" id="qn-ind-saldo">–</div>
+            </div>
+          </div>
+          <div class="charts-grid">
+            <div class="card"><h3>Gasto por etapa</h3><div class="chart-wrap"><canvas id="qn-chart-etapas"></canvas></div></div>
+            <div class="card"><h3>Materiales vs. Mano de obra</h3><div class="chart-wrap"><canvas id="qn-chart-split"></canvas></div></div>
+          </div>
+          <div class="card">
+            <h3>Detalle por etapa</h3>
+            <div class="tabla-scroll tabla-wrap">
+              <table><thead><tr>
+                <th>Etapa</th><th style="text-align:right">Materiales</th><th style="text-align:right">Mano de obra</th>
+                <th style="text-align:right">Total gastado</th><th style="text-align:right">Presupuesto</th><th style="text-align:right">Saldo</th>
+              </tr></thead><tbody id="qn-ind-tabla-body"></tbody></table>
+            </div>
+          </div>
+        </div>
+
         <div id="qn-detalle-content" style="display:none">
 
           <div class="card">
@@ -3971,7 +4005,7 @@ function renderQuinchoEtapas() {
   var cont = document.getElementById('qn-etapas-list');
   if (!QN_ETAPAS.length) { cont.innerHTML = '<div class="no-data">Todavía no hay etapas cargadas.</div>'; return; }
   cont.innerHTML = QN_ETAPAS.map(function(e) {
-    var sel = e.id === QN_ETAPA_SEL ? ' selected' : '';
+    var sel = (QN_VISTA_ACTUAL === 'etapa' && e.id === QN_ETAPA_SEL) ? ' selected' : '';
     var saldoClass = e.saldo > 0 ? 'pos' : 'cero';
     return '<div class="qn-etapa-item' + sel + '" onclick=\'seleccionarEtapaQuincho("' + e.id + '")\'>' +
       '<div class="qn-etapa-nombre">' + esc(e.nombre) + '</div>' +
@@ -3980,9 +4014,14 @@ function renderQuinchoEtapas() {
   }).join('');
 }
 
+var QN_VISTA_ACTUAL = 'etapa'; // 'etapa' o 'indicadores'
+
 function seleccionarEtapaQuincho(id) {
   QN_ETAPA_SEL = id;
+  QN_VISTA_ACTUAL = 'etapa';
   renderQuinchoEtapas();
+  document.getElementById('qn-indicadores-btn').classList.remove('selected');
+  document.getElementById('qn-indicadores-content').style.display = 'none';
   var e = QN_ETAPAS.find(function(x) { return x.id === id; });
   if (!e) return;
 
@@ -4003,6 +4042,89 @@ function seleccionarEtapaQuincho(id) {
   cancelarEdicionPresupuestoQuincho();
   cargarQuinchoMateriales();
   cargarQuinchoPresupuestoPagos();
+}
+
+// ── Indicadores (resumen de todas las etapas) ────────────────
+var qnChartEtapas = null, qnChartSplit = null;
+
+function mostrarIndicadoresQuincho() {
+  QN_VISTA_ACTUAL = 'indicadores';
+  renderQuinchoEtapas();
+  document.getElementById('qn-indicadores-btn').classList.add('selected');
+  document.getElementById('qn-detalle-empty').style.display = 'none';
+  document.getElementById('qn-detalle-content').style.display = 'none';
+  document.getElementById('qn-indicadores-content').style.display = 'block';
+  renderIndicadoresQuincho();
+}
+
+function renderIndicadoresQuincho() {
+  var totMateriales = 0, totManoObra = 0, totPresupuesto = 0;
+  QN_ETAPAS.forEach(function(e) {
+    totMateriales  += e.totalMateriales;
+    totManoObra    += e.totalPagado;
+    totPresupuesto += e.totalPresupuesto;
+  });
+  var totGastado = totMateriales + totManoObra;
+  var saldo = totPresupuesto - totManoObra;
+
+  document.getElementById('qn-ind-materiales').textContent  = fmtARS(totMateriales);
+  document.getElementById('qn-ind-manoobra').textContent    = fmtARS(totManoObra);
+  document.getElementById('qn-ind-total').textContent       = fmtARS(totGastado);
+  document.getElementById('qn-ind-presupuesto').textContent = fmtARS(totPresupuesto);
+  var saldoEl = document.getElementById('qn-ind-saldo');
+  saldoEl.textContent = fmtARS(saldo);
+  saldoEl.style.color = saldo > 0 ? '#e74c3c' : '#27ae60';
+
+  document.getElementById('qn-ind-tabla-body').innerHTML = QN_ETAPAS.map(function(e) {
+    var totalEtapa = e.totalMateriales + e.totalPagado;
+    return '<tr><td>' + esc(e.nombre) + '</td>' +
+      '<td style="text-align:right">' + fmtARS(e.totalMateriales) + '</td>' +
+      '<td style="text-align:right">' + fmtARS(e.totalPagado) + '</td>' +
+      '<td style="text-align:right;font-weight:700">' + fmtARS(totalEtapa) + '</td>' +
+      '<td style="text-align:right">' + fmtARS(e.totalPresupuesto) + '</td>' +
+      '<td style="text-align:right;' + (e.saldo > 0 ? 'color:#e74c3c' : 'color:#27ae60') + ';font-weight:700">' + fmtARS(e.saldo) + '</td>' +
+      '</tr>';
+  }).join('') + '<tr style="background:#f8fafc;font-weight:800"><td>Total</td>' +
+    '<td style="text-align:right">' + fmtARS(totMateriales) + '</td>' +
+    '<td style="text-align:right">' + fmtARS(totManoObra) + '</td>' +
+    '<td style="text-align:right">' + fmtARS(totGastado) + '</td>' +
+    '<td style="text-align:right">' + fmtARS(totPresupuesto) + '</td>' +
+    '<td style="text-align:right;' + (saldo > 0 ? 'color:#e74c3c' : 'color:#27ae60') + '">' + fmtARS(saldo) + '</td></tr>';
+
+  // Las etapas ya vienen ordenadas de mas reciente a mas vieja (ver leerEtapas);
+  // para el grafico de barras conviene leerlo en orden cronologico normal.
+  var etapasOrden = QN_ETAPAS.slice().reverse();
+  var labels = etapasOrden.map(function(e) { return e.nombre; });
+
+  if (qnChartEtapas) qnChartEtapas.destroy();
+  qnChartEtapas = new Chart(document.getElementById('qn-chart-etapas'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'Materiales',   data: etapasOrden.map(function(e) { return e.totalMateriales; }), backgroundColor: 'rgba(52,152,219,.8)', borderRadius: 4 },
+        { label: 'Mano de obra', data: etapasOrden.map(function(e) { return e.totalPagado; }),     backgroundColor: 'rgba(155,89,182,.8)', borderRadius: 4 },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: function(ctx) { return ' ' + ctx.dataset.label + ': ' + fmtARS(ctx.raw); } } } },
+      scales: { y: { ticks: { callback: function(v) { return '$' + Math.round(v / 1000) + 'k'; } } } },
+    },
+  });
+
+  if (qnChartSplit) qnChartSplit.destroy();
+  qnChartSplit = new Chart(document.getElementById('qn-chart-split'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Materiales', 'Mano de obra'],
+      datasets: [{ data: [totMateriales, totManoObra], backgroundColor: ['#3498db', '#9b59b6'], borderWidth: 2 }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right' }, tooltip: { callbacks: { label: function(ctx) { return ' ' + ctx.label + ': ' + fmtARS(ctx.raw); } } } },
+    },
+  });
 }
 
 var QN_ETAPA_MODAL_MODO = 'crear'; // 'crear' o 'editar'
