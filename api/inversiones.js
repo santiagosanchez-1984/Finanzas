@@ -272,13 +272,14 @@ async function accionImportar(req, res, sheets) {
   });
 
   if (nuevas.length > 0) {
-    const getResp = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `'${SHEET_MOVIMIENTOS}'!A:A` });
-    const lastRow = (getResp.data.values || []).length;
-    const firstRow = Math.max(lastRow + 1, 2);
-    await sheets.spreadsheets.values.update({
+    // append en vez de get-ultima-fila + update con rango fijo: evita "Range
+    // exceeds grid limits" si la grilla de la hoja tiene menos filas de las
+    // necesarias (append la expande sola).
+    await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: `'${SHEET_MOVIMIENTOS}'!A${firstRow}:K${firstRow + nuevas.length - 1}`,
+      range: `'${SHEET_MOVIMIENTOS}'!A:K`,
       valueInputOption: 'RAW',
+      insertDataOption: 'INSERT_ROWS',
       requestBody: { values: nuevas },
     });
   }
@@ -337,13 +338,11 @@ async function accionImportarTenencias(req, res, sheets) {
   });
 
   if (nuevas.length > 0) {
-    const getResp = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range: `'${SHEET_TENENCIAS}'!A:A` });
-    const lastRow = (getResp.data.values || []).length;
-    const firstRow = Math.max(lastRow + 1, 2);
-    await sheets.spreadsheets.values.update({
+    await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: `'${SHEET_TENENCIAS}'!A${firstRow}:G${firstRow + nuevas.length - 1}`,
+      range: `'${SHEET_TENENCIAS}'!A:G`,
       valueInputOption: 'RAW',
+      insertDataOption: 'INSERT_ROWS',
       requestBody: { values: nuevas },
     });
   }

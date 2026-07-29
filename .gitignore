@@ -7,6 +7,7 @@ node_modules
 claude-sheets-*.json
 extractos-cocos/
 portfolio_report_*.csv
+pdf_*.pdf
 
 .vercel
 .env*

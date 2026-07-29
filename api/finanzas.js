@@ -1,25 +1,26 @@
 // Endpoint unico para todo el modulo de Finanzas (dashboard, movimientos,
-// metadatos, existentes, presupuesto, importar, limpiar-duplicados),
-// enrutado por ?action= — asi el deployment usa 1 Serverless Function en
-// vez de 7 (limite de 12 funciones en el plan Hobby de Vercel).
+// metadatos, existentes, importar, limpiar-duplicados), enrutado por
+// ?action= — asi el deployment usa 1 Serverless Function en vez de 7
+// (limite de 12 funciones en el plan Hobby de Vercel).
 const cors = require('../lib/cors');
 const { isAuthenticated } = require('../lib/auth');
 const { getSheetsClient, getSheetGid, SHEET_ID } = require('../lib/sheets');
 const { leerUsuarios, buscarPorEmail, tienePermiso } = require('../lib/usuarios');
 const {
-  SHEET_REGISTRO, SHEET_PRESUPUESTO, parseMonto, fmtMonto, fechaToMes,
+  SHEET_REGISTRO, parseMonto, fmtMonto, fechaToMes,
   claveDuplicado, leerTodas,
 } = require('../lib/finanzas');
 
 // Mapeo accion -> { modulo, nivel } para el chequeo de permisos por modulo.
+// Importar/limpiar-duplicados quedan bajo el mismo permiso que "movimientos"
+// (el modulo Importar se unifico visualmente dentro de la pestaña Movimientos).
 const PERMISO_POR_ACCION = {
   'dashboard':          { modulo: 'dashboard',   nivel: 'lectura' },
   'metadatos':          { modulo: 'dashboard',   nivel: 'lectura' },
   'movimientos':        { modulo: 'movimientos', nivel: 'lectura' },
-  'presupuesto':        { modulo: 'presupuesto', nivel: 'lectura' },
-  'existentes':         { modulo: 'importar',    nivel: 'lectura' },
-  'importar':           { modulo: 'importar',    nivel: 'escritura' },
-  'limpiar-duplicados': { modulo: 'importar',    nivel: 'escritura' },
+  'existentes':         { modulo: 'movimientos', nivel: 'lectura' },
+  'importar':           { modulo: 'movimientos', nivel: 'escritura' },
+  'limpiar-duplicados': { modulo: 'movimientos', nivel: 'escritura' },
 };
 
 module.exports = async function(req, res) {
@@ -45,7 +46,6 @@ module.exports = async function(req, res) {
       case 'movimientos':  return await accionMovimientos(req, res, sheets);
       case 'metadatos':    return await accionMetadatos(req, res, sheets);
       case 'existentes':   return await accionExistentes(req, res, sheets);
-      case 'presupuesto':  return await accionPresupuesto(req, res, sheets);
       case 'importar':
         if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
         return await accionImportar(req, res, sheets);
@@ -164,24 +164,6 @@ async function accionExistentes(req, res, sheets) {
   res.json(keys);
 }
 
-async function accionPresupuesto(req, res, sheets) {
-  const gid = await getSheetGid(sheets, SHEET_ID, SHEET_PRESUPUESTO);
-  if (gid === null) return res.json([]);
-  const resp = await sheets.spreadsheets.values.get({
-    spreadsheetId: SHEET_ID,
-    range: `'${SHEET_PRESUPUESTO}'!A2:F200`,
-  });
-  const data = resp.data.values || [];
-  res.json(data.filter(r => r[0] && r[1]).map(r => ({
-    categoria:   r[0],
-    presupuesto: parseMonto(r[1]),
-    gastado:     parseMonto(r[2]),
-    diferencia:  parseMonto(r[3]),
-    pctUsado:    r[4],
-    estado:      r[5],
-  })));
-}
-
 async function accionImportar(req, res, sheets) {
   const { rows, banco } = req.body || {};
   if (!rows || !rows.length) return res.json({ ok: false, msg: 'Sin datos' });
@@ -219,16 +201,14 @@ async function accionImportar(req, res, sheets) {
   });
 
   if (nuevas.length > 0) {
-    const getResp = await sheets.spreadsheets.values.get({
+    // values.append (en vez de get-ultima-fila + values.update con rango fijo)
+    // porque una hoja con grilla "angosta" (menos filas que las que necesitamos
+    // escribir) tira "Range exceeds grid limits" con update — append la expande sola.
+    await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: `'${SHEET_REGISTRO}'!A:A`,
-    });
-    const lastRow = (getResp.data.values || []).length;
-    const firstRow = Math.max(lastRow + 1, 3);
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: SHEET_ID,
-      range: `'${SHEET_REGISTRO}'!A${firstRow}:J${firstRow + nuevas.length - 1}`,
+      range: `'${SHEET_REGISTRO}'!A:J`,
       valueInputOption: 'RAW',
+      insertDataOption: 'INSERT_ROWS',
       requestBody: { values: nuevas },
     });
   }

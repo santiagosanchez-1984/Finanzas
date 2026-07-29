@@ -125,6 +125,15 @@ tbody td { padding: 8px 12px; border-bottom: 1px solid #edf0f5; white-space: now
 .fac-ver { font-size: 11px; color: #2980b9; text-decoration: none; font-weight: 700; }
 .fac-ver:hover { text-decoration: underline; }
 .fac-pendientes { font-size: 12px; color: #e67e22; font-weight: 700; margin-top: 8px; }
+.fac-dup-group { border: 1.5px solid #f5c6a5; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; background: #fff8f2; }
+.fac-dup-group-header { font-size: 13px; font-weight: 700; color: #e67e22; margin-bottom: 8px; }
+.fac-dup-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid #f0e0d0; font-size: 12.5px; }
+.fac-dup-row:last-child { border-bottom: none; }
+.fac-dup-row .fdr-fecha { width: 80px; color: #888; flex-shrink: 0; }
+.fac-dup-row .fdr-prov { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fac-dup-row .fdr-total { width: 110px; text-align: right; font-weight: 700; flex-shrink: 0; }
+.fac-dup-badge-primera { font-size: 10px; font-weight: 800; color: #27ae60; background: #d4edda; padding: 2px 7px; border-radius: 8px; }
+body.fac-sin-escritura .fac-dup-row .btn-red { display: none; }
 
 /* ── Usuarios (admin) ── */
 .usr-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; background: #f8fafc; border: 1.5px solid transparent; }
@@ -141,19 +150,6 @@ tbody td { padding: 8px 12px; border-bottom: 1px solid #edf0f5; white-space: now
 .fac-modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(10,20,35,.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
 .fac-modal-backdrop.show { display: flex; }
 .fac-modal-card { max-width: 620px; width: 100%; max-height: 88vh; overflow-y: auto; margin: 0; }
-
-/* ── Presupuesto ── */
-.ppto-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
-.ppto-cat  { width: 160px; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-.ppto-bar-bg { flex: 1; height: 12px; background: #eef2f7; border-radius: 6px; overflow: hidden; }
-.ppto-bar-fill { height: 100%; border-radius: 6px; transition: width .4s; background: #27ae60; }
-.ppto-bar-fill.warn { background: #f39c12; }
-.ppto-bar-fill.over { background: #e74c3c; }
-.ppto-nums { font-size: 12px; color: #666; width: 180px; text-align: right; flex-shrink: 0; }
-.ppto-badge { font-size: 11px; width: 70px; text-align: center; }
-.semaforo-ok   { color: #27ae60; font-weight: 800; }
-.semaforo-warn { color: #f39c12; font-weight: 800; }
-.semaforo-over { color: #e74c3c; font-weight: 800; }
 
 /* ── Recientes (dashboard) ── */
 .recientes { font-size: 13px; }
@@ -191,12 +187,11 @@ tbody td { padding: 8px 12px; border-bottom: 1px solid #edf0f5; white-space: now
 <nav style="display:none">
   <button class="active" id="nav-dashboard" onclick="showTab('dashboard')">🏠 Inicio</button>
   <button id="nav-movimientos" onclick="showTab('movimientos')">📋 Movimientos</button>
-  <button id="nav-importar" onclick="showTab('importar')">📤 Importar</button>
-  <button id="nav-presupuesto" onclick="showTab('presupuesto')">🎯 Presupuesto</button>
   <button id="nav-sueldos" onclick="showTab('sueldos')">💰 Sueldos</button>
   <button id="nav-evolucion" onclick="showTab('evolucion')">📈 Evolución</button>
   <button id="nav-inversiones" onclick="showTab('inversiones')">📊 Inversiones</button>
   <button id="nav-facturas" onclick="showTab('facturas')">🧾 Facturas IVA</button>
+  <button id="nav-mercadopago" onclick="showTab('mercadopago')">💳 Mercado Pago</button>
   <button id="nav-usuarios" onclick="showTab('usuarios')" style="display:none">👤 Usuarios</button>
 </nav>
 
@@ -261,29 +256,10 @@ tbody td { padding: 8px 12px; border-bottom: 1px solid #edf0f5; white-space: now
   </div>
 </div>
 
-<!-- ═══ MOVIMIENTOS ═══ -->
+<!-- ═══ MOVIMIENTOS (+ IMPORTAR) ═══ -->
 <div id="tab-movimientos" class="tab-content">
-  <div class="card">
-    <div class="filtros-row">
-      <div class="f-item wide"><label>Mes</label><select id="m-mes" onchange="cargarMovimientos()"><option value="">Todos los meses</option></select></div>
-      <div class="f-item"><label>Banco</label><select id="m-banco" onchange="cargarMovimientos()"><option value="">Todos</option><option>Galicia</option><option>NBCH</option></select></div>
-      <div class="f-item"><label>Tipo</label><select id="m-tipo" onchange="cargarMovimientos()"><option value="">Todos</option><option>INGRESO</option><option>EGRESO</option></select></div>
-      <div class="f-item wide"><label>Categoría</label><select id="m-cat" onchange="cargarMovimientos()"><option value="">Todas</option></select></div>
-      <div class="f-item grow"><label>Buscar</label><input type="text" id="m-texto" placeholder="Descripción, medio de pago..." oninput="cargarMovimientos()"></div>
-    </div>
-    <div id="m-count" style="font-size:12px;color:#888;margin-bottom:10px"></div>
-    <div class="tabla-scroll tabla-wrap">
-      <table><thead><tr>
-        <th>Fecha</th><th>Tipo</th><th>Categoría</th><th>Subcategoría</th>
-        <th style="min-width:200px">Descripción</th><th>Monto</th><th>Medio</th><th>Banco</th>
-      </tr></thead>
-      <tbody id="m-body"></tbody></table>
-    </div>
-  </div>
-</div>
 
-<!-- ═══ IMPORTAR ═══ -->
-<div id="tab-importar" class="tab-content">
+  <!-- Importar -->
   <div class="import-grid">
 
     <!-- Galicia PDF -->
@@ -351,13 +327,24 @@ tbody td { padding: 8px 12px; border-bottom: 1px solid #edf0f5; white-space: now
       <tbody id="preview-body"></tbody></table>
     </div>
   </div>
-</div>
 
-<!-- ═══ PRESUPUESTO ═══ -->
-<div id="tab-presupuesto" class="tab-content">
+  <!-- Movimientos -->
   <div class="card">
-    <h2>Metas y Presupuesto</h2>
-    <div id="ppto-container"><div class="no-data">Cargando...</div></div>
+    <div class="filtros-row">
+      <div class="f-item wide"><label>Mes</label><select id="m-mes" onchange="cargarMovimientos()"><option value="">Todos los meses</option></select></div>
+      <div class="f-item"><label>Banco</label><select id="m-banco" onchange="cargarMovimientos()"><option value="">Todos</option><option>Galicia</option><option>NBCH</option></select></div>
+      <div class="f-item"><label>Tipo</label><select id="m-tipo" onchange="cargarMovimientos()"><option value="">Todos</option><option>INGRESO</option><option>EGRESO</option></select></div>
+      <div class="f-item wide"><label>Categoría</label><select id="m-cat" onchange="cargarMovimientos()"><option value="">Todas</option></select></div>
+      <div class="f-item grow"><label>Buscar</label><input type="text" id="m-texto" placeholder="Descripción, medio de pago..." oninput="cargarMovimientos()"></div>
+    </div>
+    <div id="m-count" style="font-size:12px;color:#888;margin-bottom:10px"></div>
+    <div class="tabla-scroll tabla-wrap">
+      <table><thead><tr>
+        <th>Fecha</th><th>Tipo</th><th>Categoría</th><th>Subcategoría</th>
+        <th style="min-width:200px">Descripción</th><th>Monto</th><th>Medio</th><th>Banco</th>
+      </tr></thead>
+      <tbody id="m-body"></tbody></table>
+    </div>
   </div>
 </div>
 
@@ -736,6 +723,24 @@ tbody td { padding: 8px 12px; border-bottom: 1px solid #edf0f5; white-space: now
     </div>
   </div>
 
+  <!-- Duplicados -->
+  <div class="card" id="fac-dup-card" style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#0A3560">🔎 Duplicados por Nro. Factura</div>
+        <div style="font-size:12px;color:#888;margin-top:2px">Detecta facturas ya guardadas con el mismo CUIT + Nro. de comprobante (cargadas dos veces desde archivos distintos)</div>
+      </div>
+      <button class="btn btn-orange" id="btn-fac-duplicados" onclick="verDuplicadosFacturas()">
+        <span class="spinner" id="sp-fac-duplicados"></span>
+        <span id="txt-fac-duplicados">🔎 Ver duplicados</span>
+      </button>
+    </div>
+    <div id="msg-fac-duplicados" class="msg" style="margin-top:10px"></div>
+    <div id="fac-dup-section" style="display:none;margin-top:14px">
+      <div id="fac-dup-body"></div>
+    </div>
+  </div>
+
   <!-- Listado guardado -->
   <div class="card">
     <h3>📋 Facturas cargadas</h3>
@@ -755,6 +760,107 @@ tbody td { padding: 8px 12px; border-bottom: 1px solid #edf0f5; white-space: now
         <th style="text-align:right">Total</th><th>Moneda</th><th>Detalle</th>
       </tr></thead>
       <tbody id="fac-listado-body"></tbody></table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ MERCADO PAGO ═══ -->
+<div id="tab-mercadopago" class="tab-content">
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card bal"><div class="kpi-label">Saldo actual</div><div class="kpi-val bal-pos" id="mp-kpi-saldo">–</div><div class="kpi-sub" id="mp-kpi-saldo-sub">Último movimiento</div></div>
+    <div class="kpi-card ing"><div class="kpi-label">Ingresos del mes</div><div class="kpi-val ing" id="mp-kpi-ingresos">–</div><div class="kpi-sub" id="mp-kpi-mes-label"></div></div>
+    <div class="kpi-card egr"><div class="kpi-label">Egresos del mes</div><div class="kpi-val egr" id="mp-kpi-egresos">–</div><div class="kpi-sub" id="mp-kpi-resultado-sub"></div></div>
+    <div class="kpi-card aho"><div class="kpi-label">Rendimientos acumulados</div><div class="kpi-val aho" id="mp-kpi-rendimientos">–</div><div class="kpi-sub" id="mp-kpi-total-sub"></div></div>
+  </div>
+
+  <!-- Gráficos -->
+  <div class="charts-grid">
+    <div class="card">
+      <h3>📈 Evolución del saldo</h3>
+      <div class="chart-wrap"><canvas id="chart-mp-saldo"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>🍽️ Gastos por categoría</h3>
+      <div class="chart-wrap"><canvas id="chart-mp-categorias"></canvas></div>
+    </div>
+  </div>
+
+  <div class="charts-grid" style="grid-template-columns:2fr 1fr">
+    <div class="card">
+      <h3>💵 Ingresos vs. egresos por mes</h3>
+      <div class="chart-wrap"><canvas id="chart-mp-mensual"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>🕓 Movimientos recientes</h3>
+      <div id="mp-recientes" class="recientes"><div class="no-data">Cargando...</div></div>
+    </div>
+  </div>
+
+  <!-- Importar -->
+  <div class="card" style="margin-bottom:14px">
+    <h3>📤 Importar resumen de cuenta</h3>
+    <div style="font-size:12px;color:#888;margin-bottom:10px">
+      Descargá el PDF "Resumen de cuenta" desde la app de Mercado Pago y subilo acá. Se procesa en tu navegador — no se envía a ningún servidor externo.
+    </div>
+    <div class="drop-zone" id="dz-mp" onclick="document.getElementById('file-mp').click()"
+         ondragover="dzOver(event,'dz-mp')" ondragleave="dzLeave('dz-mp')" ondrop="dzDropMP(event)">
+      <div class="dz-icon">💳</div>
+      <div class="dz-title">Subir PDF de Mercado Pago</div>
+      <div class="dz-sub">Hacé clic o arrastrá el archivo aquí — "Resumen de cuenta en pesos"</div>
+      <input type="file" id="file-mp" accept=".pdf" onchange="procesarArchivoMP(this.files[0])">
+    </div>
+    <div id="res-mp" class="dz-result"></div>
+
+    <!-- Preview -->
+    <div id="mp-preview-section" style="display:none;margin-top:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+        <h3 style="margin:0">Preview — <span id="mp-preview-titulo"></span></h3>
+        <div class="import-actions">
+          <span id="mp-preview-count" style="font-size:12px;color:#888"></span>
+          <button class="btn btn-green" id="btn-mp-importar" onclick="confirmarImportMP()">
+            <span id="sp-mp-import" class="spinner"></span>
+            <span id="txt-mp-import">✓ Importar</span>
+          </button>
+          <button class="btn btn-gray" onclick="cancelarPreviewMP()">✕ Cancelar</button>
+        </div>
+      </div>
+      <div id="msg-mp-import" class="msg"></div>
+      <div class="tabla-scroll tabla-wrap">
+        <table><thead><tr>
+          <th><input type="checkbox" id="mp-chk-all" onchange="toggleAllMP(this)" checked></th>
+          <th>Fecha</th><th>Categoría</th>
+          <th style="min-width:180px">Descripción</th><th>Monto</th><th>Saldo</th><th>Estado</th>
+        </tr></thead><tbody id="mp-preview-body"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Movimientos -->
+  <div class="card">
+    <h3>📋 Movimientos</h3>
+    <div class="filtros-row">
+      <div class="f-item"><label>Mes</label><select id="mp-f-mes" onchange="cargarMPMovimientos()"><option value="">Todos</option></select></div>
+      <div class="f-item"><label>Desde</label><input type="date" id="mp-f-desde" onchange="cargarMPMovimientos()"></div>
+      <div class="f-item"><label>Hasta</label><input type="date" id="mp-f-hasta" onchange="cargarMPMovimientos()"></div>
+      <div class="f-item"><label>Categoría</label><select id="mp-f-cat" onchange="cargarMPMovimientos()"><option value="">Todas</option></select></div>
+      <div class="f-item"><label>Tipo</label>
+        <select id="mp-f-tipo" onchange="cargarMPMovimientos()">
+          <option value="">Todos</option><option value="INGRESO">Ingresos</option><option value="EGRESO">Egresos</option>
+        </select>
+      </div>
+      <div class="f-item grow"><label>Descripción</label><input type="text" id="mp-f-texto" placeholder="Buscar..." oninput="cargarMPMovimientos()"></div>
+      <div class="f-item"><label>&nbsp;</label><button class="btn btn-gray" onclick="limpiarFiltrosMP()">✕ Limpiar filtros</button></div>
+    </div>
+    <div id="mp-mov-count" style="font-size:12px;color:#888;margin-bottom:10px"></div>
+    <div class="tabla-scroll tabla-wrap">
+      <table><thead><tr>
+        <th>Fecha</th><th>Descripción</th><th>Categoría</th>
+        <th style="text-align:right">Monto</th><th style="text-align:right">Saldo</th>
+      </tr></thead>
+      <tbody id="mp-mov-body"></tbody></table>
     </div>
   </div>
 
@@ -878,7 +984,6 @@ function makeRunner() {
       finish(apiCall('/api/finanzas' + qs(f)));
     },
     getExistentes:   function() { finish(apiCall('/api/finanzas' + qs({ action: 'existentes' }))); },
-    getPresupuesto:  function() { finish(apiCall('/api/finanzas' + qs({ action: 'presupuesto' }))); },
     limpiarDuplicados:function() { finish(apiCall('/api/finanzas?action=limpiar-duplicados', { method: 'POST' })); },
     importarMovimientos:function(rowsJson, banco) {
       finish(apiCall('/api/finanzas?action=importar', { method: 'POST', body: JSON.stringify({ rows: JSON.parse(rowsJson), banco: banco }) }));
@@ -912,6 +1017,17 @@ function makeRunner() {
       finish(apiCall('/api/facturas?action=guardar', { method: 'POST', body: JSON.stringify({ facturas: JSON.parse(facturasJson) }) }));
     },
     editarFactura:function(dataJson) { finish(apiCall('/api/facturas?action=editar', { method: 'POST', body: dataJson })); },
+    getFacturasDuplicados:function() { finish(apiCall('/api/facturas?action=duplicados')); },
+    eliminarFacturaDuplicada:function(dataJson) { finish(apiCall('/api/facturas?action=eliminar', { method: 'POST', body: dataJson })); },
+    getMPDashboard:function() { finish(apiCall('/api/mercadopago?action=dashboard')); },
+    getMPMovimientos:function(filtrosJson) {
+      var f = JSON.parse(filtrosJson || '{}'); f.action = 'movimientos';
+      finish(apiCall('/api/mercadopago' + qs(f)));
+    },
+    getMPExistentes:function() { finish(apiCall('/api/mercadopago?action=existentes')); },
+    importarMP:function(rowsJson) {
+      finish(apiCall('/api/mercadopago?action=importar', { method: 'POST', body: JSON.stringify({ rows: JSON.parse(rowsJson) }) }));
+    },
     getYo:function() { finish(apiCall('/api/usuarios?action=me')); },
     getUsuarios:function() { finish(apiCall('/api/usuarios?action=list')); },
     agregarUsuario:function(dataJson) { finish(apiCall('/api/usuarios?action=add', { method: 'POST', body: dataJson })); },
@@ -926,7 +1042,7 @@ function cerrarSesion() {
   apiCall('/api/logout', { method: 'POST' }).finally(function() { location.reload(); });
 }
 
-var TABS   = ['dashboard','movimientos','importar','presupuesto','sueldos','evolucion','inversiones','facturas','usuarios'];
+var TABS   = ['dashboard','movimientos','sueldos','evolucion','inversiones','facturas','mercadopago','usuarios'];
 var metaDatos = { meses: [], bancos: [], cats: [], tipos: [] };
 var chartMensual = null, chartCats = null, chartSubcat = null, chartSueldos = null, chartEvolucion = null;
 var sueldosTodos = [], evolucionDatos = [];
@@ -1030,15 +1146,16 @@ function categorizarRow(desc) {
 
 // ── Permisos por modulo ──────────────────────────────────────
 var YO = null;
-var MODULOS = ['dashboard', 'movimientos', 'importar', 'presupuesto', 'inversiones', 'facturas'];
+var MODULOS = ['dashboard', 'movimientos', 'inversiones', 'facturas', 'mercadopago'];
 var MODULO_LABEL = {
-  dashboard: 'Inicio', movimientos: 'Movimientos (+ Sueldos y Evolución)', importar: 'Importar',
-  presupuesto: 'Presupuesto', inversiones: 'Inversiones', facturas: 'Facturas IVA',
+  dashboard: 'Inicio', movimientos: 'Movimientos (+ Importar, Sueldos y Evolución)',
+  inversiones: 'Inversiones', facturas: 'Facturas IVA', mercadopago: 'Mercado Pago',
 };
 // A que modulo pertenece cada pestaña de nav (varias pestañas comparten modulo).
 var MODULO_POR_TAB = {
-  dashboard: 'dashboard', movimientos: 'movimientos', importar: 'importar', presupuesto: 'presupuesto',
+  dashboard: 'dashboard', movimientos: 'movimientos',
   sueldos: 'movimientos', evolucion: 'movimientos', inversiones: 'inversiones', facturas: 'facturas',
+  mercadopago: 'mercadopago',
 };
 
 function puede(modulo, nivel) {
@@ -1065,8 +1182,10 @@ function aplicarPermisosUI() {
   if (YO.rol === 'admin') document.getElementById('nav-usuarios').style.display = '';
 
   // Botones de escritura: se ocultan si el usuario solo tiene lectura.
-  if (!puede('importar', 'escritura')) {
-    document.querySelectorAll('#tab-importar .drop-zone').forEach(function(el){ el.style.display = 'none'; });
+  if (!puede('movimientos', 'escritura')) {
+    document.querySelectorAll('#tab-movimientos .drop-zone').forEach(function(el){ el.style.display = 'none'; });
+    var btnLimpieza = document.getElementById('btn-limpieza');
+    if (btnLimpieza) btnLimpieza.style.display = 'none';
   }
   if (!puede('inversiones', 'escritura')) {
     var btnSaldo = document.querySelector('#tab-inversiones button[onclick="abrirFormSaldo()"]');
@@ -1076,6 +1195,10 @@ function aplicarPermisosUI() {
   if (!puede('facturas', 'escritura')) {
     var btnValidar = document.getElementById('btn-fac-validar');
     if (btnValidar) btnValidar.style.display = 'none';
+    document.body.classList.add('fac-sin-escritura');
+  }
+  if (!puede('mercadopago', 'escritura')) {
+    document.querySelectorAll('#tab-mercadopago .drop-zone').forEach(function(el){ el.style.display = 'none'; });
   }
 
   if (!primerTabVisible && YO.rol !== 'admin') {
@@ -1182,11 +1305,11 @@ function showTab(nombre) {
   if (idx >= 0) document.querySelectorAll('nav button')[idx].classList.add('active');
   if (nombre === 'dashboard')   cargarDashboard();
   if (nombre === 'movimientos') cargarMovimientos();
-  if (nombre === 'presupuesto') cargarPresupuesto();
   if (nombre === 'sueldos')     cargarSueldos();
   if (nombre === 'evolucion')   cargarEvolucion();
   if (nombre === 'inversiones') cargarInversiones();
   if (nombre === 'facturas')    cargarFacturas();
+  if (nombre === 'mercadopago') cargarMercadoPago();
   if (nombre === 'usuarios')    cargarUsuarios();
 }
 
@@ -1763,32 +1886,371 @@ function confirmarImport() {
     .getExistentes();
 }
 
-// ── Presupuesto ───────────────────────────────────────────────
-function cargarPresupuesto() {
+// ── Mercado Pago ─────────────────────────────────────────────
+var CATEGORIAS_MP = [
+  'Rendimientos', 'Ingresos', 'Transferencias recibidas', 'Transferencias enviadas',
+  'Alimentación', 'Salud', 'Transporte', 'Impuestos', 'Servicios', 'Consumos/Comercios', 'Otros'
+];
+var REGLAS_MP = [
+  { r:/^Rendimientos/i,                     c:'Rendimientos' },
+  { r:/^Ingreso de dinero/i,                c:'Ingresos' },
+  { r:/^Transferencia recibida/i,           c:'Transferencias recibidas' },
+  { r:/^Transferencia enviada/i,            c:'Transferencias enviadas' },
+  { r:/farmac|avicola|drocezesky/i,         c:'Salud' },
+  { r:/\bsube\b|\bypf\b|combust/i,          c:'Transporte' },
+  { r:/municipalidad|\bafip\b|impuesto/i,   c:'Impuestos' },
+  { r:/meli\+|suscripci[oó]n/i,             c:'Servicios' },
+  { r:/verduler|pizza|pannettone|bazar|\bpan\b|sabores|delidrinks|amush|amanda|dolce/i, c:'Alimentación' },
+  { r:/pago (con qr|sube)/i,                c:'Consumos/Comercios' },
+];
+function categorizarMP(desc) {
+  for (var i = 0; i < REGLAS_MP.length; i++) if (REGLAS_MP[i].r.test(desc)) return REGLAS_MP[i].c;
+  return 'Otros';
+}
+
+var mpPreviewRows = [];
+var chartMPSaldo = null, chartMPCategorias = null, chartMPMensual = null;
+var mpDashboardData = null;
+
+function cargarMercadoPago() {
   google.script.run
     .withSuccessHandler(function(json) {
-      var data = JSON.parse(json);
-      if (!data || data.length === 0) {
-        document.getElementById('ppto-container').innerHTML =
-          '<div class="no-data">No se encontró la hoja de presupuesto.</div>';
-        return;
-      }
-      var html = data.map(function(r) {
-        var pct    = r.presupuesto > 0 ? Math.round(r.gastado / r.presupuesto * 100) : 0;
-        var fillCls = pct >= 100 ? 'over' : pct >= 80 ? 'warn' : '';
-        var semCls  = pct >= 100 ? 'semaforo-over' : pct >= 80 ? 'semaforo-warn' : 'semaforo-ok';
-        var semTxt  = pct >= 100 ? '🔴 Excedido' : pct >= 80 ? '🟡 Atención' : '🟢 OK';
-        return '<div class="ppto-row">' +
-          '<div class="ppto-cat">' + r.categoria + '</div>' +
-          '<div class="ppto-bar-bg"><div class="ppto-bar-fill ' + fillCls + '" style="width:' + Math.min(pct,100) + '%"></div></div>' +
-          '<div class="ppto-nums">' + fmtARS(r.gastado) + ' / ' + fmtARS(r.presupuesto) + ' (' + pct + '%)</div>' +
-          '<div class="ppto-badge ' + semCls + '">' + semTxt + '</div>' +
-          '</div>';
-      }).join('');
-      document.getElementById('ppto-container').innerHTML = html;
+      mpDashboardData = JSON.parse(json);
+      renderMPDashboard(mpDashboardData);
+      poblarFiltrosMP(mpDashboardData);
+      cargarMPMovimientos();
     })
     .withFailureHandler(function(e){ console.error(e); })
-    .getPresupuesto();
+    .getMPDashboard();
+}
+
+function poblarFiltrosMP(d) {
+  var selMes = document.getElementById('mp-f-mes');
+  if (selMes.options.length <= 1) {
+    var MNOMBRES = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    Object.keys(d.porMes || {}).sort().reverse().forEach(function(m) {
+      var p = m.split('-');
+      var opt = document.createElement('option');
+      opt.value = m; opt.textContent = (MNOMBRES[+p[1]] || p[1]) + ' ' + p[0];
+      selMes.appendChild(opt);
+    });
+  }
+  var selCat = document.getElementById('mp-f-cat');
+  if (selCat.options.length <= 1) {
+    CATEGORIAS_MP.forEach(function(c) {
+      var opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      selCat.appendChild(opt);
+    });
+  }
+}
+
+function renderMPDashboard(d) {
+  document.getElementById('mp-kpi-saldo').textContent = fmtARS(d.saldoActual);
+  document.getElementById('mp-kpi-saldo-sub').textContent = d.saldoActualFecha ? 'Al ' + d.saldoActualFecha : 'Sin movimientos';
+  document.getElementById('mp-kpi-ingresos').textContent = fmtARS(d.ingresosMes);
+  document.getElementById('mp-kpi-mes-label').textContent = 'Mes actual (' + d.mesActual + ')';
+  document.getElementById('mp-kpi-egresos').textContent = fmtARS(d.egresosMes);
+  document.getElementById('mp-kpi-resultado-sub').textContent =
+    (d.resultadoMes >= 0 ? 'Resultado +' : 'Resultado -') + fmtARS(Math.abs(d.resultadoMes));
+  document.getElementById('mp-kpi-rendimientos').textContent = fmtARS(d.rendimientosTotal);
+  document.getElementById('mp-kpi-total-sub').textContent = d.totalMovimientos + ' movimientos totales';
+
+  // Evolución del saldo
+  var ev = d.evolucionSaldo || [];
+  if (chartMPSaldo) chartMPSaldo.destroy();
+  chartMPSaldo = new Chart(document.getElementById('chart-mp-saldo'), {
+    type: 'line',
+    data: {
+      labels: ev.map(function(p){ return p.fecha; }),
+      datasets: [{
+        label: 'Saldo', data: ev.map(function(p){ return p.saldo; }),
+        borderColor: '#0A3560', backgroundColor: 'rgba(10,53,96,.08)',
+        fill: true, tension: .25, pointRadius: 0, borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx){ return ' ' + fmtARS(ctx.raw); } } } },
+      scales: {
+        x: { ticks: { maxTicksLimit: 8 } },
+        y: { ticks: { callback: function(v){ return '$' + Math.round(v/1000) + 'k'; } } }
+      }
+    }
+  });
+
+  // Gastos por categoría
+  var CAT_COLORS = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63','#ff5722','#607d8b','#95a5a6'];
+  var porCat = d.porCategoria || {};
+  var cats = Object.keys(porCat).sort(function(a,b){ return porCat[b] - porCat[a]; });
+  if (chartMPCategorias) chartMPCategorias.destroy();
+  chartMPCategorias = new Chart(document.getElementById('chart-mp-categorias'), {
+    type: 'doughnut',
+    data: { labels: cats, datasets: [{ data: cats.map(function(c){ return porCat[c]; }), backgroundColor: CAT_COLORS, borderWidth: 2 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { font: { size: 11 } } },
+        tooltip: { callbacks: { label: function(ctx){ return ' ' + fmtARS(ctx.raw); } } } }
+    }
+  });
+
+  // Ingresos vs egresos por mes
+  var porMes = d.porMes || {};
+  var meses = Object.keys(porMes).sort();
+  var MNOMBRES = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  var labelsM = meses.map(function(m){ var p = m.split('-'); return MNOMBRES[+p[1]] + ' ' + p[0].substring(2); });
+  if (chartMPMensual) chartMPMensual.destroy();
+  chartMPMensual = new Chart(document.getElementById('chart-mp-mensual'), {
+    type: 'bar',
+    data: {
+      labels: labelsM,
+      datasets: [
+        { label:'Ingresos', data: meses.map(function(m){ return porMes[m].ingresos; }), backgroundColor: 'rgba(39,174,96,.75)', borderRadius: 5 },
+        { label:'Egresos',  data: meses.map(function(m){ return porMes[m].egresos; }),  backgroundColor: 'rgba(231,76,60,.75)', borderRadius: 5 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: { y: { ticks: { callback: function(v){ return '$' + Math.round(v/1000) + 'k'; } } } }
+    }
+  });
+
+  // Recientes
+  var htmlR = (d.recientes || []).map(function(r) {
+    var esIng = r.valor >= 0;
+    return '<div class="rec-row">' +
+      '<div class="rec-fecha">' + r.fecha + '</div>' +
+      '<div class="rec-desc" title="' + r.descripcion + '">' + r.descripcion + '</div>' +
+      '<div class="rec-cat">' + r.categoria + '</div>' +
+      '<div class="rec-monto ' + (esIng?'ing':'egr') + '">' + (esIng?'+':'-') + fmtARS(Math.abs(r.valor)) + '</div>' +
+      '</div>';
+  }).join('');
+  document.getElementById('mp-recientes').innerHTML = htmlR || '<div class="no-data">Sin movimientos todavía</div>';
+}
+
+// ── Movimientos ──
+function cargarMPMovimientos() {
+  var filtros = {
+    mes:       document.getElementById('mp-f-mes').value,
+    desde:     document.getElementById('mp-f-desde').value,
+    hasta:     document.getElementById('mp-f-hasta').value,
+    categoria: document.getElementById('mp-f-cat').value,
+    tipo:      document.getElementById('mp-f-tipo').value,
+    texto:     document.getElementById('mp-f-texto').value
+  };
+  google.script.run
+    .withSuccessHandler(function(json) {
+      var d = JSON.parse(json);
+      document.getElementById('mp-mov-count').textContent = d.total + ' movimientos';
+      var html = (d.rows || []).map(function(r) {
+        var esIng = r.valor >= 0;
+        return '<tr>' +
+          '<td>' + r.fecha + '</td>' +
+          '<td style="max-width:260px;overflow:hidden;text-overflow:ellipsis" title="' + r.descripcion + '">' + r.descripcion + '</td>' +
+          '<td>' + r.categoria + '</td>' +
+          '<td style="text-align:right;font-weight:700;color:' + (esIng?'#27ae60':'#e74c3c') + '">' +
+            (esIng?'+':'-') + fmtARS(Math.abs(r.valor)) + '</td>' +
+          '<td style="text-align:right;color:#888">' + fmtARS(r.saldo) + '</td>' +
+          '</tr>';
+      }).join('');
+      document.getElementById('mp-mov-body').innerHTML = html || '<tr><td colspan="5" class="no-data">Sin resultados</td></tr>';
+    })
+    .withFailureHandler(function(e){ console.error(e); })
+    .getMPMovimientos(JSON.stringify(filtros));
+}
+
+function limpiarFiltrosMP() {
+  document.getElementById('mp-f-mes').value = '';
+  document.getElementById('mp-f-desde').value = '';
+  document.getElementById('mp-f-hasta').value = '';
+  document.getElementById('mp-f-cat').value = '';
+  document.getElementById('mp-f-tipo').value = '';
+  document.getElementById('mp-f-texto').value = '';
+  cargarMPMovimientos();
+}
+
+// ── Importar — Drag & Drop ──
+function dzDropMP(e) {
+  e.preventDefault();
+  dzLeave('dz-mp');
+  var file = e.dataTransfer.files[0];
+  if (file) procesarArchivoMP(file);
+}
+
+function procesarArchivoMP(file) {
+  if (!file) return;
+  var res = document.getElementById('res-mp');
+  if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+    res.innerHTML = '<span class="dz-err">⚠️ El resumen de Mercado Pago debe ser un PDF.</span>'; return;
+  }
+  res.innerHTML = '<span style="color:#888">Procesando <em>' + file.name + '</em>...</span>';
+  var fr = new FileReader();
+  fr.onload = function(e) { parsearMercadoPagoPDF(e.target.result, file.name, res); };
+  fr.readAsArrayBuffer(file);
+}
+
+// A diferencia del parser de Galicia, ACÁ NO conviene reagrupar los items por
+// coordenada Y/X: este PDF tiene filas de altura variable (descripciones de
+// 1 a 3 líneas) con el ID/Valor/Saldo centrados verticalmente, y reordenar
+// por posición termina mezclando texto de filas vecinas. El orden "natural"
+// en que pdf.js emite los items ya viene en orden de lectura correcto —
+// solo hace falta cortar renglón cuando el Y salta (nueva fila de tabla).
+// Validado contra un resumen real completo (123/123 movimientos, entradas/
+// salidas/saldo final exactos).
+function parsearMercadoPagoPDF(buffer, nombre, resEl) {
+  pdfjsLib.getDocument({data: buffer}).promise.then(function(pdf) {
+    var pagePromises = [];
+    for (var p = 1; p <= pdf.numPages; p++) {
+      pagePromises.push(pdf.getPage(p).then(function(page) {
+        return page.getTextContent().then(function(tc) {
+          var texto = '', prevY = null;
+          tc.items.forEach(function(item) {
+            if (!item.str.trim()) return;
+            var y = item.transform[5];
+            if (prevY !== null) texto += (Math.abs(y - prevY) > 2 ? '\n' : ' ');
+            texto += item.str;
+            prevY = y;
+          });
+          return texto;
+        });
+      }));
+    }
+    return Promise.all(pagePromises);
+  }).then(function(paginas) {
+    var texto = paginas.join('\n');
+    var txs = extraerTxsMercadoPago(texto);
+    if (txs.length === 0) {
+      resEl.innerHTML = '<span class="dz-err">No se encontraron movimientos. ¿Es el "Resumen de cuenta" de Mercado Pago correcto?</span>';
+      return;
+    }
+    resEl.innerHTML = '<span class="dz-ok">✓ ' + txs.length + ' movimientos detectados</span>';
+    mostrarPreviewMP(txs);
+  }).catch(function(err) {
+    resEl.innerHTML = '<span class="dz-err">Error al leer el PDF: ' + err.message + '</span>';
+  });
+}
+
+// Cada movimiento tiene: Fecha (dd-mm-aaaa) · Descripción (1 a 3 líneas) ·
+// ID de operación (9-16 dígitos) · Valor ($) · Saldo ($). Los lookaround
+// (?<!\d)/(?!\d) evitan que el ID largo se parta mal cuando la descripción
+// no termina justo antes (ej. "...1744533410932" no debe leerse como
+// descripción="...1" + id="744533410932"). El pie de página "Fecha de
+// generación: dd-mm-aaaa" hay que sacarlo ANTES de buscar movimientos:
+// como también matchea el patrón de fecha, si cae en medio del documento
+// (varía según la cantidad de páginas) actúa como ancla falsa y se traga
+// el movimiento real que le sigue.
+function extraerTxsMercadoPago(texto) {
+  var SKIP = [/^Fecha de generaci[oó]n/i, /^Mercado Libre S\.R\.L\./i, /^de consulta en:/i];
+  texto = texto.split('\n').filter(function(l) {
+    return !SKIP.some(function(re) { return re.test(l.trim()); });
+  }).join('\n');
+
+  var RE_REC = /(\d{2})-(\d{2})-(\d{4})\s+([\s\S]+?)\s*(?<!\d)(\d{9,16})(?!\d)\s+\$\s*(-?[\d.]+,\d{2})\s+\$\s*(-?[\d.]+,\d{2})/g;
+  var txs = [], m;
+  while ((m = RE_REC.exec(texto)) !== null) {
+    var fecha = m[1] + '/' + m[2] + '/' + m[3];
+    var desc  = m[4].replace(/\s+/g, ' ').trim();
+    var idOp  = m[5];
+    var valor = parseFloat(m[6].replace(/\./g,'').replace(',','.'));
+    var saldo = parseFloat(m[7].replace(/\./g,'').replace(',','.'));
+    if (!desc || desc.length > 150 || isNaN(valor)) continue;
+    txs.push({ fecha: fecha, descripcion: desc, idOperacion: idOp, valor: valor, saldo: saldo, categoria: categorizarMP(desc) });
+  }
+  return txs;
+}
+
+function mostrarPreviewMP(txs) {
+  mpPreviewRows = txs;
+  document.getElementById('mp-preview-section').style.display = '';
+  document.getElementById('mp-preview-titulo').textContent = txs.length + ' movimientos';
+  document.getElementById('mp-preview-count').textContent = txs.length + ' filas';
+
+  var html = txs.map(function(r, i) {
+    var esIng = r.valor >= 0;
+    var catOpts = CATEGORIAS_MP.map(function(c){
+      return '<option value="' + c + '"' + (c===r.categoria?' selected':'') + '>' + c + '</option>';
+    }).join('');
+    return '<tr>' +
+      '<td><input type="checkbox" class="mp-chk-row" checked></td>' +
+      '<td>' + r.fecha + '</td>' +
+      '<td><select onchange="mpPreviewRows[' + i + '].categoria=this.value">' + catOpts + '</select></td>' +
+      '<td style="max-width:220px;overflow:hidden;text-overflow:ellipsis" title="' + r.descripcion + '">' + r.descripcion + '</td>' +
+      '<td style="text-align:right;font-weight:700;color:' + (esIng?'#27ae60':'#e74c3c') + '">' + (esIng?'+':'-') + fmtARS(Math.abs(r.valor)) + '</td>' +
+      '<td style="text-align:right;color:#888">' + fmtARS(r.saldo) + '</td>' +
+      '<td><span class="b-new">Nuevo</span></td>' +
+      '</tr>';
+  }).join('');
+  document.getElementById('mp-preview-body').innerHTML = html;
+  document.getElementById('msg-mp-import').className = 'msg';
+  document.getElementById('mp-preview-section').scrollIntoView({behavior:'smooth'});
+}
+
+function toggleAllMP(chk) {
+  document.querySelectorAll('.mp-chk-row').forEach(function(c){ c.checked = chk.checked; });
+}
+
+function cancelarPreviewMP() {
+  document.getElementById('mp-preview-section').style.display = 'none';
+  document.getElementById('file-mp').value = '';
+  document.getElementById('res-mp').innerHTML = '';
+  mpPreviewRows = [];
+}
+
+function confirmarImportMP() {
+  var checkboxes = document.querySelectorAll('.mp-chk-row');
+  var seleccionadas = mpPreviewRows.filter(function(_, i) { return checkboxes[i] && checkboxes[i].checked; });
+  if (seleccionadas.length === 0) {
+    mostrarMsg('msg-mp-import', 'No hay filas seleccionadas.', 'error'); return;
+  }
+
+  var btn = document.getElementById('btn-mp-importar');
+  btn.disabled = true;
+  document.getElementById('sp-mp-import').classList.add('show');
+  document.getElementById('txt-mp-import').textContent = 'Verificando duplicados...';
+
+  google.script.run
+    .withSuccessHandler(function(json) {
+      var existentes = JSON.parse(json) || {};
+      var nuevas = seleccionadas.filter(function(row) { return !existentes[String(row.idOperacion)]; });
+      var dupCount = seleccionadas.length - nuevas.length;
+
+      if (nuevas.length === 0) {
+        btn.disabled = false;
+        document.getElementById('sp-mp-import').classList.remove('show');
+        document.getElementById('txt-mp-import').textContent = '✓ Importar';
+        mostrarMsg('msg-mp-import', '⚠️ Todos los movimientos ya estaban importados (' + dupCount + ' duplicados omitidos).', 'info');
+        return;
+      }
+
+      document.getElementById('txt-mp-import').textContent = 'Importando ' + nuevas.length + ' movimientos...';
+      google.script.run
+        .withSuccessHandler(function(json2) {
+          var r = JSON.parse(json2);
+          btn.disabled = false;
+          document.getElementById('sp-mp-import').classList.remove('show');
+          document.getElementById('txt-mp-import').textContent = '✓ Importar';
+          if (!r.ok) { mostrarMsg('msg-mp-import', '❌ Error: ' + r.msg, 'error'); return; }
+          mostrarMsg('msg-mp-import',
+            '✅ ' + r.importadas + ' movimientos importados.' + (dupCount > 0 ? ' ' + dupCount + ' duplicados omitidos.' : ''), 'ok');
+          cancelarPreviewMP();
+          cargarMercadoPago();
+        })
+        .withFailureHandler(function(e) {
+          btn.disabled = false;
+          document.getElementById('sp-mp-import').classList.remove('show');
+          document.getElementById('txt-mp-import').textContent = '✓ Importar';
+          mostrarMsg('msg-mp-import', '❌ Error al importar: ' + e.message, 'error');
+        })
+        .importarMP(JSON.stringify(nuevas));
+    })
+    .withFailureHandler(function(e) {
+      btn.disabled = false;
+      document.getElementById('sp-mp-import').classList.remove('show');
+      document.getElementById('txt-mp-import').textContent = '✓ Importar';
+      mostrarMsg('msg-mp-import', '❌ Error al verificar duplicados: ' + e.message, 'error');
+    })
+    .getMPExistentes();
 }
 
 // ── Limpieza ─────────────────────────────────────────────────
@@ -2907,15 +3369,19 @@ function validarFacturasNuevas() {
         mostrarMsg('msg-fac-validar', d.totalNuevos === 0 ? 'No hay facturas nuevas en la carpeta de Drive.' : 'No se pudo procesar ninguna.', 'info');
         return;
       }
+      var dupsDetectados = 0;
       d.procesadas.forEach(function(p) {
         if (!facturasPreview.some(function(x) { return x.driveFileId === p.driveFileId; })) {
-          p._incluir = !p.error;
+          p._incluir = !p.error && !p.posibleDuplicado;
+          if (p.posibleDuplicado) dupsDetectados++;
           facturasPreview.push(p);
         }
       });
       renderFacturasPreview();
       document.getElementById('fac-preview-section').style.display = '';
-      mostrarMsg('msg-fac-validar', '✓ Se analizaron ' + d.procesadas.length + ' comprobantes nuevos. Revisá los datos antes de guardar.', 'ok');
+      mostrarMsg('msg-fac-validar', '✓ Se analizaron ' + d.procesadas.length + ' comprobantes nuevos.' +
+        (dupsDetectados > 0 ? ' ⚠ ' + dupsDetectados + ' parecen ser facturas que ya tenés cargadas (mismo CUIT + Nro. Factura) — quedaron destildadas.' : ' Revisá los datos antes de guardar.'),
+        dupsDetectados > 0 ? 'info' : 'ok');
       var pend = document.getElementById('fac-pendientes');
       if (d.pendientes > 0) {
         pend.style.display = '';
@@ -2939,7 +3405,8 @@ function renderFacturasPreview() {
   document.getElementById('fac-preview-body').innerHTML = facturasPreview.map(function(r, i) {
     var verLink = '<a class="fac-ver" target="_blank" href="https://drive.google.com/file/d/' + r.driveFileId + '/view">👁 Ver original</a>';
     var archivoCell = '<div style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(r.driveFileName) + '">' + r.driveFileName + '</div>' + verLink +
-      (r.error ? '<div class="fac-err-badge" title="' + esc(r.error) + '">⚠ ' + r.error + '</div>' : '');
+      (r.error ? '<div class="fac-err-badge" title="' + esc(r.error) + '">⚠ ' + r.error + '</div>' : '') +
+      (r.posibleDuplicado ? '<div class="fac-err-badge" style="background:#fff3cd;color:#856404" title="Ya existe una factura guardada con el mismo CUIT + Nro. Factura">⚠ Posible duplicado</div>' : '');
     return '<tr' + (r.error ? ' class="fac-err"' : '') + '>' +
       '<td><input type="checkbox" ' + (r._incluir ? 'checked' : '') + ' onchange="facturasPreview[' + i + ']._incluir=this.checked"></td>' +
       '<td>' + archivoCell + '</td>' +
@@ -2991,7 +3458,10 @@ function confirmarGuardarFacturas() {
       document.getElementById('txt-fac-guardar').textContent = '💾 Guardar seleccionadas';
       var r = JSON.parse(json);
       if (r.ok) {
-        mostrarMsg('msg-fac-guardar', '✓ Se guardaron ' + r.guardadas + ' facturas' + (r.duplicadas ? ' (' + r.duplicadas + ' ya existían).' : '.'), 'ok');
+        var detalleDup = '';
+        if (r.duplicadasPorNumero) detalleDup += r.duplicadasPorNumero + ' con Nro. Factura repetido';
+        if (r.duplicadasPorArchivo) detalleDup += (detalleDup ? ', ' : '') + r.duplicadasPorArchivo + ' ya cargadas antes';
+        mostrarMsg('msg-fac-guardar', '✓ Se guardaron ' + r.guardadas + ' facturas' + (detalleDup ? ' (' + detalleDup + ' — se omitieron).' : '.'), 'ok');
         var guardadosIds = {};
         seleccionadas.forEach(function(s) { guardadosIds[s.driveFileId] = true; });
         facturasPreview = facturasPreview.filter(function(r) { return !guardadosIds[r.driveFileId]; });
@@ -3009,6 +3479,98 @@ function confirmarGuardarFacturas() {
       mostrarMsg('msg-fac-guardar', 'Error: ' + e.message, 'error');
     })
     .guardarFacturas(JSON.stringify(seleccionadas));
+}
+
+// ── Duplicados por Nro. Factura ──────────────────────────────
+function verDuplicadosFacturas() {
+  var btn = document.getElementById('btn-fac-duplicados');
+  btn.disabled = true;
+  document.getElementById('sp-fac-duplicados').classList.add('show');
+  document.getElementById('txt-fac-duplicados').textContent = 'Buscando...';
+  document.getElementById('msg-fac-duplicados').className = 'msg';
+
+  google.script.run
+    .withSuccessHandler(function(json) {
+      btn.disabled = false;
+      document.getElementById('sp-fac-duplicados').classList.remove('show');
+      document.getElementById('txt-fac-duplicados').textContent = '🔎 Ver duplicados';
+      var d = JSON.parse(json);
+      renderDuplicadosFacturas(d.grupos || []);
+      document.getElementById('fac-dup-section').style.display = '';
+      if (!d.grupos || d.grupos.length === 0) {
+        mostrarMsg('msg-fac-duplicados', '✓ No se encontraron facturas duplicadas.', 'ok');
+      } else {
+        mostrarMsg('msg-fac-duplicados', '⚠ ' + d.grupos.length + ' Nro. de factura repetido' + (d.grupos.length === 1 ? '' : 's') +
+          ' (' + d.totalFilasDuplicadas + ' fila' + (d.totalFilasDuplicadas === 1 ? '' : 's') + ' de más para eliminar).', 'info');
+      }
+    })
+    .withFailureHandler(function(e) {
+      btn.disabled = false;
+      document.getElementById('sp-fac-duplicados').classList.remove('show');
+      document.getElementById('txt-fac-duplicados').textContent = '🔎 Ver duplicados';
+      mostrarMsg('msg-fac-duplicados', 'Error: ' + e.message, 'error');
+    })
+    .getFacturasDuplicados();
+}
+
+function renderDuplicadosFacturas(grupos) {
+  if (grupos.length === 0) {
+    document.getElementById('fac-dup-body').innerHTML = '<div class="no-data">Sin duplicados 🎉</div>';
+    return;
+  }
+  document.getElementById('fac-dup-body').innerHTML = grupos.map(function(g) {
+    var filasHtml = g.filas.map(function(r, i) {
+      var verLink = '<a class="fac-ver" target="_blank" href="https://drive.google.com/file/d/' + r.driveFileId + '/view">👁 Ver</a>';
+      return '<div class="fac-dup-row">' +
+        (i === 0 ? '<span class="fac-dup-badge-primera">Más antigua</span>' : '<span style="width:70px;flex-shrink:0"></span>') +
+        '<span class="fdr-fecha">' + (r.fecha || '–') + '</span>' +
+        '<span class="fdr-prov" title="' + esc(r.proveedor) + '">' + (r.proveedor || '–') + '</span>' +
+        '<span class="fdr-total">' + fmtMonInv(r.total, r.moneda) + '</span>' +
+        '<span>' + verLink + '</span>' +
+        '<button class="btn btn-red" style="padding:4px 10px;font-size:11px" onclick=\'eliminarFacturaDup(this,"' + r.driveFileId + '")\'>🗑 Eliminar</button>' +
+        '</div>';
+    }).join('');
+    return '<div class="fac-dup-group">' +
+      '<div class="fac-dup-group-header">CUIT ' + (g.cuit || '–') + ' · Nro. Factura ' + (g.numeroFactura || '–') + ' · ' + g.filas.length + ' copias</div>' +
+      filasHtml +
+      '</div>';
+  }).join('');
+}
+
+// Confirmacion en 2 clicks (sin dialog nativo confirm()): el primer click
+// arma el boton en modo "click de nuevo para confirmar" por 3s, el segundo
+// click dentro de esa ventana borra de verdad.
+function eliminarFacturaDup(btn, driveFileId) {
+  if (btn.dataset.confirmando !== '1') {
+    btn.dataset.confirmando = '1';
+    btn.textContent = '⚠ Click de nuevo para borrar';
+    clearTimeout(btn._facTimeout);
+    btn._facTimeout = setTimeout(function() {
+      btn.dataset.confirmando = '0';
+      btn.textContent = '🗑 Eliminar';
+    }, 3000);
+    return;
+  }
+  clearTimeout(btn._facTimeout);
+  btn.disabled = true;
+  btn.textContent = 'Eliminando...';
+  google.script.run
+    .withSuccessHandler(function(json) {
+      var r = JSON.parse(json);
+      if (!r.ok) {
+        mostrarMsg('msg-fac-duplicados', 'Error: ' + r.msg, 'error');
+        btn.disabled = false; btn.dataset.confirmando = '0'; btn.textContent = '🗑 Eliminar';
+        return;
+      }
+      FACTURAS_CACHE = FACTURAS_CACHE.filter(function(x) { return x.driveFileId !== driveFileId; });
+      aplicarFiltrosFacturas();
+      verDuplicadosFacturas();
+    })
+    .withFailureHandler(function(e) {
+      mostrarMsg('msg-fac-duplicados', 'Error: ' + e.message, 'error');
+      btn.disabled = false; btn.dataset.confirmando = '0'; btn.textContent = '🗑 Eliminar';
+    })
+    .eliminarFacturaDuplicada(JSON.stringify({ driveFileId: driveFileId }));
 }
 
 // ── Usuarios (admin) ────────────────────────────────────────
