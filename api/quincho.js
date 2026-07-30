@@ -10,6 +10,7 @@ const { leerUsuarios, buscarPorEmail, tienePermiso } = require('../lib/usuarios'
 const {
   SHEET_ETAPAS, SHEET_MATERIALES, SHEET_PRESUPUESTO, SHEET_PAGOS,
   HEADER_ETAPAS, HEADER_MATERIALES, HEADER_PRESUPUESTO, HEADER_PAGOS,
+  CATEGORIAS_PAGO,
   leerEtapas, leerMateriales, leerPresupuesto, leerPagos,
   calcularTotalesEtapa, claveDuplicadoMaterial, subirImagenADrive,
   analizarMaterialConGemini, agregarEtapa, actualizarEtapa,
@@ -221,15 +222,16 @@ async function accionPagos(req, res, sheets) {
 }
 
 async function accionPagosAgregar(req, res, sheets) {
-  const { etapaId, fecha, mes, detalle, monto } = req.body || {};
+  const { etapaId, fecha, mes, detalle, monto, categoria } = req.body || {};
   if (!etapaId || !fecha || !monto) return res.json({ ok: false, msg: 'Faltan datos obligatorios' });
+  const cat = CATEGORIAS_PAGO.indexOf(categoria) >= 0 ? categoria : 'Mano de Obra';
   await ensureSheetExists(sheets, QUINCHO_SHEET_ID, SHEET_PAGOS, HEADER_PAGOS);
   await sheets.spreadsheets.values.append({
     spreadsheetId: QUINCHO_SHEET_ID,
-    range: `'${SHEET_PAGOS}'!A:E`,
+    range: `'${SHEET_PAGOS}'!A:F`,
     valueInputOption: 'RAW',
     insertDataOption: 'INSERT_ROWS',
-    requestBody: { values: [[etapaId, fecha, mes || '', detalle || '', monto]] },
+    requestBody: { values: [[etapaId, fecha, mes || '', detalle || '', monto, cat]] },
   });
   res.json({ ok: true });
 }

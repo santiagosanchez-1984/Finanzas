@@ -943,7 +943,8 @@ body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !impo
           <div class="kpi-grid">
             <div class="kpi-card bal"><div class="kpi-label">Total Materiales</div><div class="kpi-val bal-pos" id="qn-ind-materiales">–</div></div>
             <div class="kpi-card aho"><div class="kpi-label">Total Mano de Obra</div><div class="kpi-val aho" id="qn-ind-manoobra">–</div></div>
-            <div class="kpi-card egr"><div class="kpi-label">Total gastado</div><div class="kpi-val egr" id="qn-ind-total">–</div></div>
+            <div class="kpi-card bal"><div class="kpi-label">Total Flete</div><div class="kpi-val bal-pos" id="qn-ind-flete">–</div></div>
+            <div class="kpi-card egr"><div class="kpi-label">Total gastado (todo)</div><div class="kpi-val egr" id="qn-ind-total">–</div></div>
             <div class="kpi-card ing"><div class="kpi-label">Presupuestado (mano de obra)</div><div class="kpi-val ing" id="qn-ind-presupuesto">–</div></div>
           </div>
           <div class="card" style="margin-bottom:16px">
@@ -954,14 +955,15 @@ body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !impo
           </div>
           <div class="charts-grid">
             <div class="card"><h3>Gasto por etapa</h3><div class="chart-wrap"><canvas id="qn-chart-etapas"></canvas></div></div>
-            <div class="card"><h3>Materiales vs. Mano de obra</h3><div class="chart-wrap"><canvas id="qn-chart-split"></canvas></div></div>
+            <div class="card"><h3>Materiales / Mano de obra / Flete</h3><div class="chart-wrap"><canvas id="qn-chart-split"></canvas></div></div>
           </div>
           <div class="card">
             <h3>Detalle por etapa</h3>
             <div class="tabla-scroll tabla-wrap">
               <table><thead><tr>
                 <th>Etapa</th><th style="text-align:right">Materiales</th><th style="text-align:right">Mano de obra</th>
-                <th style="text-align:right">Total gastado</th><th style="text-align:right">Presupuesto</th><th style="text-align:right">Saldo</th>
+                <th style="text-align:right">Flete</th><th style="text-align:right">Total gastado</th>
+                <th style="text-align:right">Presupuesto</th><th style="text-align:right">Saldo</th>
               </tr></thead><tbody id="qn-ind-tabla-body"></tbody></table>
             </div>
           </div>
@@ -980,9 +982,11 @@ body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !impo
             <div id="qn-etapa-detalle-txt" style="font-size:12.5px;color:#888;margin-top:6px"></div>
             <div class="kpi-grid" style="margin-top:14px">
               <div class="kpi-card bal"><div class="kpi-label">Materiales</div><div class="kpi-val bal-pos" id="qn-kpi-materiales">–</div></div>
-              <div class="kpi-card ing"><div class="kpi-label">Presupuesto</div><div class="kpi-val ing" id="qn-kpi-presupuesto">–</div></div>
-              <div class="kpi-card egr"><div class="kpi-label">Pagado</div><div class="kpi-val egr" id="qn-kpi-pagado">–</div></div>
+              <div class="kpi-card ing"><div class="kpi-label">Presupuesto (mano de obra)</div><div class="kpi-val ing" id="qn-kpi-presupuesto">–</div></div>
+              <div class="kpi-card egr"><div class="kpi-label">Pagado (mano de obra)</div><div class="kpi-val egr" id="qn-kpi-pagado">–</div></div>
               <div class="kpi-card aho"><div class="kpi-label">Saldo (falta pagar)</div><div class="kpi-val aho" id="qn-kpi-saldo">–</div></div>
+              <div class="kpi-card bal"><div class="kpi-label">Flete</div><div class="kpi-val bal-pos" id="qn-kpi-flete">–</div></div>
+              <div class="kpi-card egr"><div class="kpi-label">Total gastado (todo)</div><div class="kpi-val egr" id="qn-kpi-totalgastado">–</div></div>
             </div>
           </div>
 
@@ -1072,16 +1076,20 @@ body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !impo
           <div id="qn-sub-pagos" style="display:none">
             <div class="card">
               <h3>💳 Pagos</h3>
-              <div class="qn-solo-escritura" style="display:grid;grid-template-columns:1fr 1fr 2fr 1fr auto;gap:8px;margin-bottom:14px;align-items:end">
+              <div class="qn-solo-escritura" style="display:grid;grid-template-columns:1fr 1fr 2fr 1fr 1fr auto;gap:8px;margin-bottom:14px;align-items:end">
                 <div class="f-item"><label>Fecha</label><input type="date" id="qn-pag-fecha"></div>
                 <div class="f-item"><label>Mes</label><input type="text" id="qn-pag-mes" placeholder="Marzo"></div>
                 <div class="f-item"><label>Detalle</label><input type="text" id="qn-pag-detalle"></div>
+                <div class="f-item"><label>Categoría</label>
+                  <select id="qn-pag-categoria"><option value="Mano de Obra">Mano de Obra</option><option value="Flete">Flete</option></select>
+                </div>
                 <div class="f-item"><label>Monto</label><input type="number" step="0.01" id="qn-pag-monto"></div>
                 <button class="btn btn-primary" onclick="agregarPagoQuinchoForm()">➕</button>
               </div>
+              <div style="font-size:12px;color:#888;margin-bottom:8px">💡 "Flete" suma al total gastado pero no descuenta del presupuesto/saldo de mano de obra.</div>
               <div id="qn-pag-msg" class="msg"></div>
               <div class="tabla-scroll tabla-wrap">
-                <table><thead><tr><th>Fecha</th><th>Mes</th><th>Detalle</th><th style="text-align:right">Monto</th><th></th></tr></thead>
+                <table><thead><tr><th>Fecha</th><th>Mes</th><th>Detalle</th><th>Categoría</th><th style="text-align:right">Monto</th><th></th></tr></thead>
                 <tbody id="qn-pagos-body"></tbody></table>
               </div>
             </div>
@@ -4033,10 +4041,12 @@ function seleccionarEtapaQuincho(id) {
   badge.className = 'badge ' + (e.estado === 'Terminada' ? 'b-ing' : 'b-banco-nbch');
   document.getElementById('qn-etapa-detalle-txt').textContent =
     [e.fecha, e.detalle].filter(function(x) { return x; }).join(' — ');
-  document.getElementById('qn-kpi-materiales').textContent  = fmtARS(e.totalMateriales);
-  document.getElementById('qn-kpi-presupuesto').textContent = fmtARS(e.totalPresupuesto);
-  document.getElementById('qn-kpi-pagado').textContent      = fmtARS(e.totalPagado);
-  document.getElementById('qn-kpi-saldo').textContent       = fmtARS(e.saldo);
+  document.getElementById('qn-kpi-materiales').textContent   = fmtARS(e.totalMateriales);
+  document.getElementById('qn-kpi-presupuesto').textContent  = fmtARS(e.totalPresupuesto);
+  document.getElementById('qn-kpi-pagado').textContent       = fmtARS(e.totalManoDeObra);
+  document.getElementById('qn-kpi-saldo').textContent        = fmtARS(e.saldo);
+  document.getElementById('qn-kpi-flete').textContent        = fmtARS(e.totalFlete);
+  document.getElementById('qn-kpi-totalgastado').textContent = fmtARS(e.totalMateriales + e.totalPagado);
 
   cancelarFormMaterialQuincho();
   cancelarEdicionPresupuestoQuincho();
@@ -4058,17 +4068,19 @@ function mostrarIndicadoresQuincho() {
 }
 
 function renderIndicadoresQuincho() {
-  var totMateriales = 0, totManoObra = 0, totPresupuesto = 0;
+  var totMateriales = 0, totManoObra = 0, totFlete = 0, totPresupuesto = 0;
   QN_ETAPAS.forEach(function(e) {
     totMateriales  += e.totalMateriales;
-    totManoObra    += e.totalPagado;
+    totManoObra    += e.totalManoDeObra;
+    totFlete       += e.totalFlete;
     totPresupuesto += e.totalPresupuesto;
   });
-  var totGastado = totMateriales + totManoObra;
+  var totGastado = totMateriales + totManoObra + totFlete;
   var saldo = totPresupuesto - totManoObra;
 
   document.getElementById('qn-ind-materiales').textContent  = fmtARS(totMateriales);
   document.getElementById('qn-ind-manoobra').textContent    = fmtARS(totManoObra);
+  document.getElementById('qn-ind-flete').textContent       = fmtARS(totFlete);
   document.getElementById('qn-ind-total').textContent       = fmtARS(totGastado);
   document.getElementById('qn-ind-presupuesto').textContent = fmtARS(totPresupuesto);
   var saldoEl = document.getElementById('qn-ind-saldo');
@@ -4076,10 +4088,11 @@ function renderIndicadoresQuincho() {
   saldoEl.style.color = saldo > 0 ? '#e74c3c' : '#27ae60';
 
   document.getElementById('qn-ind-tabla-body').innerHTML = QN_ETAPAS.map(function(e) {
-    var totalEtapa = e.totalMateriales + e.totalPagado;
+    var totalEtapa = e.totalMateriales + e.totalManoDeObra + e.totalFlete;
     return '<tr><td>' + esc(e.nombre) + '</td>' +
       '<td style="text-align:right">' + fmtARS(e.totalMateriales) + '</td>' +
-      '<td style="text-align:right">' + fmtARS(e.totalPagado) + '</td>' +
+      '<td style="text-align:right">' + fmtARS(e.totalManoDeObra) + '</td>' +
+      '<td style="text-align:right">' + fmtARS(e.totalFlete) + '</td>' +
       '<td style="text-align:right;font-weight:700">' + fmtARS(totalEtapa) + '</td>' +
       '<td style="text-align:right">' + fmtARS(e.totalPresupuesto) + '</td>' +
       '<td style="text-align:right;' + (e.saldo > 0 ? 'color:#e74c3c' : 'color:#27ae60') + ';font-weight:700">' + fmtARS(e.saldo) + '</td>' +
@@ -4087,6 +4100,7 @@ function renderIndicadoresQuincho() {
   }).join('') + '<tr style="background:#f8fafc;font-weight:800"><td>Total</td>' +
     '<td style="text-align:right">' + fmtARS(totMateriales) + '</td>' +
     '<td style="text-align:right">' + fmtARS(totManoObra) + '</td>' +
+    '<td style="text-align:right">' + fmtARS(totFlete) + '</td>' +
     '<td style="text-align:right">' + fmtARS(totGastado) + '</td>' +
     '<td style="text-align:right">' + fmtARS(totPresupuesto) + '</td>' +
     '<td style="text-align:right;' + (saldo > 0 ? 'color:#e74c3c' : 'color:#27ae60') + '">' + fmtARS(saldo) + '</td></tr>';
@@ -4102,8 +4116,9 @@ function renderIndicadoresQuincho() {
     data: {
       labels: labels,
       datasets: [
-        { label: 'Materiales',   data: etapasOrden.map(function(e) { return e.totalMateriales; }), backgroundColor: 'rgba(52,152,219,.8)', borderRadius: 4 },
-        { label: 'Mano de obra', data: etapasOrden.map(function(e) { return e.totalPagado; }),     backgroundColor: 'rgba(155,89,182,.8)', borderRadius: 4 },
+        { label: 'Materiales',   data: etapasOrden.map(function(e) { return e.totalMateriales; }),  backgroundColor: 'rgba(52,152,219,.8)', borderRadius: 4 },
+        { label: 'Mano de obra', data: etapasOrden.map(function(e) { return e.totalManoDeObra; }),   backgroundColor: 'rgba(155,89,182,.8)', borderRadius: 4 },
+        { label: 'Flete',        data: etapasOrden.map(function(e) { return e.totalFlete; }),        backgroundColor: 'rgba(230,126,34,.8)', borderRadius: 4 },
       ],
     },
     options: {
@@ -4117,8 +4132,8 @@ function renderIndicadoresQuincho() {
   qnChartSplit = new Chart(document.getElementById('qn-chart-split'), {
     type: 'doughnut',
     data: {
-      labels: ['Materiales', 'Mano de obra'],
-      datasets: [{ data: [totMateriales, totManoObra], backgroundColor: ['#3498db', '#9b59b6'], borderWidth: 2 }],
+      labels: ['Materiales', 'Mano de obra', 'Flete'],
+      datasets: [{ data: [totMateriales, totManoObra, totFlete], backgroundColor: ['#3498db', '#9b59b6', '#e67e22'], borderWidth: 2 }],
     },
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -4413,9 +4428,11 @@ function renderQuinchoPresupuesto() {
 
 function renderQuinchoPagos() {
   var body = document.getElementById('qn-pagos-body');
-  if (!QN_PAGOS.length) { body.innerHTML = '<tr><td colspan="5" class="no-data">Sin pagos cargados.</td></tr>'; return; }
+  if (!QN_PAGOS.length) { body.innerHTML = '<tr><td colspan="6" class="no-data">Sin pagos cargados.</td></tr>'; return; }
   body.innerHTML = QN_PAGOS.map(function(p) {
+    var badge = p.categoria === 'Flete' ? 'b-banco-nbch' : 'b-banco-galicia';
     return '<tr><td>' + esc(p.fecha) + '</td><td>' + esc(p.mes) + '</td><td>' + esc(p.detalle) + '</td>' +
+      '<td><span class="badge ' + badge + '">' + esc(p.categoria) + '</span></td>' +
       '<td style="text-align:right;font-weight:700">' + fmtARS(p.monto) + '</td>' +
       '<td class="qn-solo-escritura"><button class="btn btn-red" style="padding:4px 9px" onclick="eliminarPagoQuinchoFila(' + p.fila + ')">🗑️</button></td></tr>';
   }).join('');
@@ -4484,6 +4501,7 @@ function agregarPagoQuinchoForm() {
     etapaId: QN_ETAPA_SEL, fecha: fecha,
     mes: document.getElementById('qn-pag-mes').value.trim(),
     detalle: document.getElementById('qn-pag-detalle').value.trim(),
+    categoria: document.getElementById('qn-pag-categoria').value,
     monto: monto,
   };
   google.script.run
@@ -4492,6 +4510,7 @@ function agregarPagoQuinchoForm() {
       if (!r.ok) { msgEl.className = 'msg error show'; msgEl.textContent = r.msg || 'Error al guardar'; return; }
       msgEl.className = 'msg';
       ['qn-pag-fecha', 'qn-pag-mes', 'qn-pag-detalle', 'qn-pag-monto'].forEach(function(id) { document.getElementById(id).value = ''; });
+      document.getElementById('qn-pag-categoria').value = 'Mano de Obra';
       cargarQuinchoPresupuestoPagos();
       cargarQuincho();
     })
