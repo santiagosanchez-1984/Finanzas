@@ -14,7 +14,7 @@ const {
   leerEtapas, leerMateriales, leerPresupuesto, leerPagos,
   calcularTotalesEtapa, claveDuplicadoMaterial, subirImagenADrive,
   analizarMaterialConGemini, agregarEtapa, actualizarEtapa,
-  actualizarPresupuesto, eliminarFila,
+  actualizarPresupuesto, actualizarPago, eliminarFila,
 } = require('../lib/quincho');
 
 const QUINCHO_SHEET_ID = process.env.QUINCHO_SHEET_ID;
@@ -25,7 +25,7 @@ const NIVEL_POR_ACCION = {
   'etapas': 'lectura', 'crear-etapa': 'escritura', 'editar-etapa': 'escritura',
   'materiales': 'lectura', 'materiales-analizar': 'escritura', 'materiales-guardar': 'escritura', 'materiales-eliminar': 'escritura',
   'presupuesto': 'lectura', 'presupuesto-agregar': 'escritura', 'presupuesto-editar': 'escritura', 'presupuesto-eliminar': 'escritura',
-  'pagos': 'lectura', 'pagos-agregar': 'escritura', 'pagos-eliminar': 'escritura',
+  'pagos': 'lectura', 'pagos-agregar': 'escritura', 'pagos-editar': 'escritura', 'pagos-eliminar': 'escritura',
 };
 
 module.exports = async function(req, res) {
@@ -81,6 +81,9 @@ module.exports = async function(req, res) {
       case 'pagos-agregar':
         if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
         return await accionPagosAgregar(req, res, sheets);
+      case 'pagos-editar':
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+        return await accionPagosEditar(req, res, sheets);
       case 'pagos-eliminar':
         if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
         return await accionEliminar(req, res, sheets, SHEET_PAGOS);
@@ -233,6 +236,13 @@ async function accionPagosAgregar(req, res, sheets) {
     insertDataOption: 'INSERT_ROWS',
     requestBody: { values: [[etapaId, fecha, mes || '', detalle || '', monto, cat]] },
   });
+  res.json({ ok: true });
+}
+
+async function accionPagosEditar(req, res, sheets) {
+  const { fila, fecha, mes, detalle, monto, categoria } = req.body || {};
+  if (!fila || !fecha || !monto) return res.json({ ok: false, msg: 'Faltan datos obligatorios' });
+  await actualizarPago(sheets, QUINCHO_SHEET_ID, { fila, fecha, mes, detalle, monto, categoria });
   res.json({ ok: true });
 }
 
