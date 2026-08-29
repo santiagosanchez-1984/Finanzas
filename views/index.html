@@ -4085,47 +4085,59 @@ function imprimirResumenQuinchoEtapa() {
 
   function porFecha(a, b) { return (fechaDDMMYYYYaISO(a.fecha) || '').localeCompare(fechaDDMMYYYYaISO(b.fecha) || ''); }
   var presupuestoOrdenado = QN_PRESUPUESTO.slice().sort(porFecha);
-  var pagosOrdenados = QN_PAGOS.slice().sort(porFecha);
+  // Solo Mano de Obra — el informe es para el contratista, el Flete no le corresponde.
+  var pagosManoDeObra = QN_PAGOS.filter(function(p) { return p.categoria !== 'Flete'; }).sort(porFecha);
 
   var filasPresupuesto = presupuestoOrdenado.length
     ? presupuestoOrdenado.map(function(p) {
         return '<tr><td>' + esc(p.fecha) + '</td><td>' + esc(p.detalle) + '</td><td style="text-align:right">' + fmtARS(p.monto) + '</td></tr>';
       }).join('')
     : '<tr><td colspan="3" style="text-align:center;color:#999">Sin ítems de presupuesto.</td></tr>';
+  filasPresupuesto += '<tr class="total-row"><td colspan="2">Total presupuesto</td><td style="text-align:right">' + fmtARS(e.totalPresupuesto) + '</td></tr>';
 
-  var filasPagos = pagosOrdenados.length
-    ? pagosOrdenados.map(function(p) {
-        return '<tr><td>' + esc(p.fecha) + '</td><td>' + esc(p.detalle) + '</td><td>' + esc(p.categoria) + '</td><td style="text-align:right">' + fmtARS(p.monto) + '</td></tr>';
+  var filasPagos = pagosManoDeObra.length
+    ? pagosManoDeObra.map(function(p) {
+        return '<tr><td>' + esc(p.fecha) + '</td><td>' + esc(p.detalle) + '</td><td style="text-align:right">' + fmtARS(p.monto) + '</td></tr>';
       }).join('')
-    : '<tr><td colspan="4" style="text-align:center;color:#999">Sin pagos cargados.</td></tr>';
+    : '<tr><td colspan="3" style="text-align:center;color:#999">Sin pagos cargados.</td></tr>';
+  filasPagos += '<tr class="total-row"><td colspan="2">Total pagado</td><td style="text-align:right">' + fmtARS(e.totalManoDeObra) + '</td></tr>';
 
   var hoy = new Date();
   var fechaHoy = String(hoy.getDate()).padStart(2, '0') + '/' + String(hoy.getMonth() + 1).padStart(2, '0') + '/' + hoy.getFullYear();
 
   var html = '<!doctype html><html><head><meta charset="utf-8"><title>Quincho — ' + esc(e.nombre) + '</title><style>' +
-    'body{font-family:Arial,Helvetica,sans-serif;color:#222;padding:24px;max-width:800px;margin:0 auto}' +
-    'h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:26px 0 8px;border-bottom:2px solid #0A3560;padding-bottom:4px;color:#0A3560}' +
-    '.sub{color:#777;font-size:12px;margin-bottom:18px}' +
-    'table{width:100%;border-collapse:collapse;font-size:12.5px}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}' +
-    'th{background:#f0f4f8}' +
-    '.resumen{display:flex;gap:22px;flex-wrap:wrap;margin:16px 0;padding:14px 16px;background:#f0f4f8;border-radius:8px}' +
-    '.resumen div{font-size:11.5px;color:#666;text-transform:uppercase;letter-spacing:.4px}' +
-    '.resumen div b{display:block;font-size:17px;color:#222;text-transform:none;letter-spacing:0;margin-top:2px}' +
-    '.foot{margin-top:30px;font-size:11px;color:#999}' +
-    '@media print{body{padding:0}}' +
+    'body{font-family:Arial,Helvetica,sans-serif;color:#222;padding:28px;max-width:800px;margin:0 auto;background:#fff}' +
+    'h1{font-size:21px;margin:0 0 2px;color:#0A3560}' +
+    'h2{font-size:14.5px;margin:28px 0 10px;color:#fff;background:#0A3560;padding:8px 12px;border-radius:6px 6px 0 0}' +
+    '.sub{color:#888;font-size:12px;margin-bottom:20px}' +
+    'table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:-1px}' +
+    'th,td{padding:7px 10px;text-align:left;border-bottom:1px solid #e8eef5}' +
+    'th{background:#f0f4f8;color:#556;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px}' +
+    'tbody tr:nth-child(even):not(.total-row){background:#f8fafc}' +
+    '.total-row td{border-top:2px solid #0A3560;border-bottom:none;font-weight:800;color:#0A3560;background:#eaf1f8}' +
+    '.resumen{display:flex;gap:14px;flex-wrap:wrap;margin:18px 0}' +
+    '.kpi{flex:1;min-width:150px;border-radius:10px;padding:14px 16px;border-top:5px solid;background:#f7f9fb}' +
+    '.kpi .lbl{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#888}' +
+    '.kpi .val{font-size:19px;font-weight:900;margin-top:4px}' +
+    '.kpi.presupuesto{border-color:#27ae60;background:#eafaf1}.kpi.presupuesto .val{color:#1e8449}' +
+    '.kpi.pagado{border-color:#e67e22;background:#fef5eb}.kpi.pagado .val{color:#d35400}' +
+    '.kpi.saldo{border-color:#8e44ad;background:#f6effa}.kpi.saldo .val{color:#6c3483}' +
+    '.foot{margin-top:34px;font-size:11px;color:#aaa;text-align:center}' +
+    '@media print{body{padding:0}.kpi{-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+      'th{-webkit-print-color-adjust:exact;print-color-adjust:exact}h2{-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+      '.total-row td{-webkit-print-color-adjust:exact;print-color-adjust:exact}tbody tr:nth-child(even){-webkit-print-color-adjust:exact;print-color-adjust:exact}}' +
     '</style></head><body>' +
     '<h1>🏗️ Quincho — ' + esc(e.nombre) + '</h1>' +
     '<div class="sub">Generado el ' + fechaHoy + (e.fecha ? ' — Etapa iniciada el ' + esc(e.fecha) : '') + '</div>' +
     '<div class="resumen">' +
-      '<div>Presupuesto (mano de obra)<b>' + fmtARS(e.totalPresupuesto) + '</b></div>' +
-      '<div>Pagado (mano de obra)<b>' + fmtARS(e.totalManoDeObra) + '</b></div>' +
-      '<div>Falta pagar<b>' + fmtARS(e.saldo) + '</b></div>' +
-      '<div>Flete<b>' + fmtARS(e.totalFlete) + '</b></div>' +
+      '<div class="kpi presupuesto"><div class="lbl">Presupuesto</div><div class="val">' + fmtARS(e.totalPresupuesto) + '</div></div>' +
+      '<div class="kpi pagado"><div class="lbl">Pagado</div><div class="val">' + fmtARS(e.totalManoDeObra) + '</div></div>' +
+      '<div class="kpi saldo"><div class="lbl">Falta pagar</div><div class="val">' + fmtARS(e.saldo) + '</div></div>' +
     '</div>' +
     '<h2>📐 Presupuesto</h2>' +
     '<table><thead><tr><th>Fecha</th><th>Detalle</th><th style="text-align:right">Monto</th></tr></thead><tbody>' + filasPresupuesto + '</tbody></table>' +
-    '<h2>💳 Pagos</h2>' +
-    '<table><thead><tr><th>Fecha</th><th>Detalle</th><th>Categoría</th><th style="text-align:right">Monto</th></tr></thead><tbody>' + filasPagos + '</tbody></table>' +
+    '<h2>💳 Pagos — Mano de Obra</h2>' +
+    '<table><thead><tr><th>Fecha</th><th>Detalle</th><th style="text-align:right">Monto</th></tr></thead><tbody>' + filasPagos + '</tbody></table>' +
     '<div class="foot">Finanzas Personales — módulo Quincho</div>' +
     '</body></html>';
 
