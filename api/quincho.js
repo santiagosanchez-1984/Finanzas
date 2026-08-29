@@ -13,7 +13,7 @@ const {
   CATEGORIAS_PAGO,
   leerEtapas, leerMateriales, leerPresupuesto, leerPagos,
   calcularTotalesEtapa, claveDuplicadoMaterial, subirImagenADrive,
-  analizarMaterialConGemini, agregarEtapa, actualizarEtapa,
+  analizarMaterialConGemini, analizarPagoConGemini, agregarEtapa, actualizarEtapa,
   actualizarPresupuesto, actualizarPago, eliminarFila,
 } = require('../lib/quincho');
 
@@ -26,7 +26,7 @@ const NIVEL_POR_ACCION = {
   'etapas': 'lectura', 'crear-etapa': 'escritura', 'editar-etapa': 'escritura',
   'materiales': 'lectura', 'materiales-analizar': 'escritura', 'materiales-guardar': 'escritura', 'materiales-eliminar': 'escritura',
   'presupuesto': 'lectura', 'presupuesto-agregar': 'escritura', 'presupuesto-editar': 'escritura', 'presupuesto-eliminar': 'escritura',
-  'pagos': 'lectura', 'pagos-agregar': 'escritura', 'pagos-editar': 'escritura', 'pagos-eliminar': 'escritura',
+  'pagos': 'lectura', 'pagos-analizar': 'escritura', 'pagos-agregar': 'escritura', 'pagos-editar': 'escritura', 'pagos-eliminar': 'escritura',
 };
 
 module.exports = async function(req, res) {
@@ -79,6 +79,9 @@ module.exports = async function(req, res) {
         return await accionEliminar(req, res, sheets, SHEET_PRESUPUESTO);
 
       case 'pagos': return await accionPagos(req, res, sheets);
+      case 'pagos-analizar':
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+        return await accionPagosAnalizar(req, res);
       case 'pagos-agregar':
         if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
         return await accionPagosAgregar(req, res, sheets);
@@ -232,6 +235,13 @@ async function subirComprobantePago(fecha, detalle, base64, mimeType) {
   const ext = mimeType.split('/')[1] || 'jpg';
   const nombreArchivo = (fecha || 'pago') + ' - ' + (detalle || 'comprobante') + '.' + ext;
   return subirImagenADrive(getDriveClientEscritura(), QUINCHO_PAGOS_FOLDER_ID, base64, mimeType, nombreArchivo);
+}
+
+async function accionPagosAnalizar(req, res) {
+  const { base64, mimeType } = req.body || {};
+  if (!base64 || !mimeType) return res.json({ ok: false, msg: 'Falta la imagen' });
+  const datos = await analizarPagoConGemini(base64, mimeType);
+  res.json({ ok: true, fecha: datos.fecha || '', monto: datos.monto || 0, detalle: datos.detalle || '' });
 }
 
 async function accionPagosAgregar(req, res, sheets) {

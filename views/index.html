@@ -1304,6 +1304,9 @@ function makeRunner() {
       finish(apiCall('/api/quincho?action=presupuesto-eliminar', { method: 'POST', body: JSON.stringify({ fila: fila }) }));
     },
     getQuinchoPagos:function(etapaId) { finish(apiCall('/api/quincho' + qs({ action: 'pagos', etapaId: etapaId }))); },
+    analizarPagoQuincho:function(dataJson) {
+      finish(apiCall('/api/quincho?action=pagos-analizar', { method: 'POST', body: dataJson }));
+    },
     agregarPagoQuincho:function(dataJson) {
       finish(apiCall('/api/quincho?action=pagos-agregar', { method: 'POST', body: dataJson }));
     },
@@ -4605,13 +4608,36 @@ function actualizarMesDesdeFechaPagoQuincho() {
 var QN_PAGOS_EDIT_FILA = null;
 var QN_PAG_COMPROBANTE_PENDIENTE = null; // { base64, mimeType } mientras hay un comprobante elegido sin guardar
 
+// Al elegir el comprobante, ademas de dejarlo listo para subir a Drive, se
+// manda a analizar con IA (Gemini) para autocompletar fecha/monto/detalle —
+// mismo patron que la foto de Materiales. Si el analisis falla (o el modelo
+// no puede leerlo) no bloquea nada: el usuario completa el resto a mano.
 function seleccionarComprobantePagoQuincho(file) {
   var info = document.getElementById('qn-pag-comprobante-info');
   if (!file) { QN_PAG_COMPROBANTE_PENDIENTE = null; info.textContent = ''; return; }
   var fr = new FileReader();
   fr.onload = function(e) {
-    QN_PAG_COMPROBANTE_PENDIENTE = { base64: e.target.result.split(',')[1], mimeType: file.type || 'application/octet-stream' };
-    info.textContent = '📎 ' + file.name;
+    var base64 = e.target.result.split(',')[1];
+    var mimeType = file.type || 'application/octet-stream';
+    QN_PAG_COMPROBANTE_PENDIENTE = { base64: base64, mimeType: mimeType };
+    info.textContent = '📎 ' + file.name + ' — analizando con IA...';
+
+    google.script.run
+      .withSuccessHandler(function(json) {
+        info.textContent = '📎 ' + file.name;
+        var r = JSON.parse(json);
+        if (!r.ok) return;
+        if (r.fecha) {
+          document.getElementById('qn-pag-fecha').value = fechaDDMMYYYYaISO(r.fecha);
+          actualizarMesDesdeFechaPagoQuincho();
+        }
+        if (r.monto) document.getElementById('qn-pag-monto').value = r.monto;
+        if (r.detalle && !document.getElementById('qn-pag-detalle').value.trim()) {
+          document.getElementById('qn-pag-detalle').value = r.detalle;
+        }
+      })
+      .withFailureHandler(function() { info.textContent = '📎 ' + file.name; })
+      .analizarPagoQuincho(JSON.stringify({ base64: base64, mimeType: mimeType }));
   };
   fr.readAsDataURL(file);
 }
