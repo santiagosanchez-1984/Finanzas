@@ -976,6 +976,7 @@ body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !impo
               <div style="display:flex;align-items:center;gap:10px">
                 <h3 id="qn-etapa-titulo" style="margin:0">–</h3>
                 <button class="btn btn-gray qn-solo-escritura" style="padding:4px 10px" onclick="abrirModalEditarEtapaQuincho()">✏️ Editar</button>
+                <button class="btn btn-gray" style="padding:4px 10px" onclick="imprimirResumenQuinchoEtapa()">🖨️ Imprimir / PDF</button>
               </div>
               <span id="qn-etapa-estado-badge" class="badge b-ing"></span>
             </div>
@@ -1001,13 +1002,42 @@ body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !impo
           </div>
 
           <div class="qn-subtabs">
-            <button class="btn qn-subtab-btn active" id="qn-sub-btn-materiales" onclick="mostrarSubtabQuincho('materiales')">📦 Materiales</button>
+            <button class="btn qn-subtab-btn active" id="qn-sub-btn-pagos" onclick="mostrarSubtabQuincho('pagos')">💳 Pagos</button>
+            <button class="btn qn-subtab-btn" id="qn-sub-btn-materiales" onclick="mostrarSubtabQuincho('materiales')">📦 Materiales</button>
             <button class="btn qn-subtab-btn" id="qn-sub-btn-presupuesto" onclick="mostrarSubtabQuincho('presupuesto')">📐 Presupuesto</button>
-            <button class="btn qn-subtab-btn" id="qn-sub-btn-pagos" onclick="mostrarSubtabQuincho('pagos')">💳 Pagos</button>
+          </div>
+
+          <!-- Pagos -->
+          <div id="qn-sub-pagos">
+            <div class="card">
+              <h3>💳 Pagos</h3>
+              <div class="qn-solo-escritura" style="display:grid;grid-template-columns:1fr 1fr 2fr 1fr 1fr auto auto;gap:8px;margin-bottom:10px;align-items:end">
+                <div class="f-item"><label>Fecha</label><input type="date" id="qn-pag-fecha" onchange="actualizarMesDesdeFechaPagoQuincho()"></div>
+                <div class="f-item"><label>Mes</label><input type="text" id="qn-pag-mes" readonly style="background:#f0f4f8"></div>
+                <div class="f-item"><label>Detalle</label><input type="text" id="qn-pag-detalle"></div>
+                <div class="f-item"><label>Categoría</label>
+                  <select id="qn-pag-categoria"><option value="Mano de Obra">Mano de Obra</option><option value="Flete">Flete</option></select>
+                </div>
+                <div class="f-item"><label>Monto</label><input type="number" step="0.01" id="qn-pag-monto"></div>
+                <button class="btn btn-primary" id="qn-pag-btn-guardar" onclick="guardarPagoQuinchoForm()">➕</button>
+                <button class="btn btn-gray" id="qn-pag-btn-cancelar" onclick="cancelarEdicionPagoQuincho()" style="display:none">✕</button>
+              </div>
+              <div class="f-item qn-solo-escritura" style="margin-bottom:10px">
+                <label>Comprobante (transferencia, etc. — opcional)</label>
+                <input type="file" id="qn-pag-comprobante" accept="image/*,application/pdf" onchange="seleccionarComprobantePagoQuincho(this.files[0])">
+                <div id="qn-pag-comprobante-info" style="font-size:11.5px;color:#888;margin-top:4px"></div>
+              </div>
+              <div style="font-size:12px;color:#888;margin-bottom:8px">💡 "Flete" suma al total gastado pero no descuenta del presupuesto/saldo de mano de obra.</div>
+              <div id="qn-pag-msg" class="msg"></div>
+              <div class="tabla-scroll tabla-wrap">
+                <table><thead><tr><th>Fecha</th><th>Mes</th><th>Detalle</th><th>Categoría</th><th style="text-align:right">Monto</th><th>Comprobante</th><th></th></tr></thead>
+                <tbody id="qn-pagos-body"></tbody></table>
+              </div>
+            </div>
           </div>
 
           <!-- Materiales -->
-          <div id="qn-sub-materiales">
+          <div id="qn-sub-materiales" style="display:none">
             <div class="card qn-solo-escritura" style="margin-bottom:14px">
               <h3>📷 Cargar material</h3>
               <div class="drop-zone" id="qn-dz-material" onclick="document.getElementById('qn-file-material').click()"
@@ -1078,30 +1108,6 @@ body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !impo
               <div class="tabla-scroll tabla-wrap">
                 <table><thead><tr><th>Fecha</th><th>Detalle</th><th style="text-align:right">Monto</th><th></th></tr></thead>
                 <tbody id="qn-presupuesto-body"></tbody></table>
-              </div>
-            </div>
-          </div>
-
-          <!-- Pagos -->
-          <div id="qn-sub-pagos" style="display:none">
-            <div class="card">
-              <h3>💳 Pagos</h3>
-              <div class="qn-solo-escritura" style="display:grid;grid-template-columns:1fr 1fr 2fr 1fr 1fr auto auto;gap:8px;margin-bottom:14px;align-items:end">
-                <div class="f-item"><label>Fecha</label><input type="date" id="qn-pag-fecha" onchange="actualizarMesDesdeFechaPagoQuincho()"></div>
-                <div class="f-item"><label>Mes</label><input type="text" id="qn-pag-mes" readonly style="background:#f0f4f8"></div>
-                <div class="f-item"><label>Detalle</label><input type="text" id="qn-pag-detalle"></div>
-                <div class="f-item"><label>Categoría</label>
-                  <select id="qn-pag-categoria"><option value="Mano de Obra">Mano de Obra</option><option value="Flete">Flete</option></select>
-                </div>
-                <div class="f-item"><label>Monto</label><input type="number" step="0.01" id="qn-pag-monto"></div>
-                <button class="btn btn-primary" id="qn-pag-btn-guardar" onclick="guardarPagoQuinchoForm()">➕</button>
-                <button class="btn btn-gray" id="qn-pag-btn-cancelar" onclick="cancelarEdicionPagoQuincho()" style="display:none">✕</button>
-              </div>
-              <div style="font-size:12px;color:#888;margin-bottom:8px">💡 "Flete" suma al total gastado pero no descuenta del presupuesto/saldo de mano de obra.</div>
-              <div id="qn-pag-msg" class="msg"></div>
-              <div class="tabla-scroll tabla-wrap">
-                <table><thead><tr><th>Fecha</th><th>Mes</th><th>Detalle</th><th>Categoría</th><th style="text-align:right">Monto</th><th></th></tr></thead>
-                <tbody id="qn-pagos-body"></tbody></table>
               </div>
             </div>
           </div>
@@ -4069,6 +4075,68 @@ function seleccionarEtapaQuincho(id) {
   cargarQuinchoPresupuestoPagos();
 }
 
+// Abre una ventana nueva con un resumen imprimible de la etapa (presupuesto,
+// pagos y totales) y dispara el dialogo de impresion del navegador — desde
+// ahi el usuario puede imprimir en papel o elegir "Guardar como PDF" para
+// mandarselo al contratista. No usa ninguna libreria de PDF.
+function imprimirResumenQuinchoEtapa() {
+  var e = QN_ETAPAS.find(function(x) { return x.id === QN_ETAPA_SEL; });
+  if (!e) return;
+
+  function porFecha(a, b) { return (fechaDDMMYYYYaISO(a.fecha) || '').localeCompare(fechaDDMMYYYYaISO(b.fecha) || ''); }
+  var presupuestoOrdenado = QN_PRESUPUESTO.slice().sort(porFecha);
+  var pagosOrdenados = QN_PAGOS.slice().sort(porFecha);
+
+  var filasPresupuesto = presupuestoOrdenado.length
+    ? presupuestoOrdenado.map(function(p) {
+        return '<tr><td>' + esc(p.fecha) + '</td><td>' + esc(p.detalle) + '</td><td style="text-align:right">' + fmtARS(p.monto) + '</td></tr>';
+      }).join('')
+    : '<tr><td colspan="3" style="text-align:center;color:#999">Sin ítems de presupuesto.</td></tr>';
+
+  var filasPagos = pagosOrdenados.length
+    ? pagosOrdenados.map(function(p) {
+        return '<tr><td>' + esc(p.fecha) + '</td><td>' + esc(p.detalle) + '</td><td>' + esc(p.categoria) + '</td><td style="text-align:right">' + fmtARS(p.monto) + '</td></tr>';
+      }).join('')
+    : '<tr><td colspan="4" style="text-align:center;color:#999">Sin pagos cargados.</td></tr>';
+
+  var hoy = new Date();
+  var fechaHoy = String(hoy.getDate()).padStart(2, '0') + '/' + String(hoy.getMonth() + 1).padStart(2, '0') + '/' + hoy.getFullYear();
+
+  var html = '<!doctype html><html><head><meta charset="utf-8"><title>Quincho — ' + esc(e.nombre) + '</title><style>' +
+    'body{font-family:Arial,Helvetica,sans-serif;color:#222;padding:24px;max-width:800px;margin:0 auto}' +
+    'h1{font-size:20px;margin:0 0 2px}h2{font-size:15px;margin:26px 0 8px;border-bottom:2px solid #0A3560;padding-bottom:4px;color:#0A3560}' +
+    '.sub{color:#777;font-size:12px;margin-bottom:18px}' +
+    'table{width:100%;border-collapse:collapse;font-size:12.5px}th,td{border:1px solid #ddd;padding:6px 8px;text-align:left}' +
+    'th{background:#f0f4f8}' +
+    '.resumen{display:flex;gap:22px;flex-wrap:wrap;margin:16px 0;padding:14px 16px;background:#f0f4f8;border-radius:8px}' +
+    '.resumen div{font-size:11.5px;color:#666;text-transform:uppercase;letter-spacing:.4px}' +
+    '.resumen div b{display:block;font-size:17px;color:#222;text-transform:none;letter-spacing:0;margin-top:2px}' +
+    '.foot{margin-top:30px;font-size:11px;color:#999}' +
+    '@media print{body{padding:0}}' +
+    '</style></head><body>' +
+    '<h1>🏗️ Quincho — ' + esc(e.nombre) + '</h1>' +
+    '<div class="sub">Generado el ' + fechaHoy + (e.fecha ? ' — Etapa iniciada el ' + esc(e.fecha) : '') + '</div>' +
+    '<div class="resumen">' +
+      '<div>Presupuesto (mano de obra)<b>' + fmtARS(e.totalPresupuesto) + '</b></div>' +
+      '<div>Pagado (mano de obra)<b>' + fmtARS(e.totalManoDeObra) + '</b></div>' +
+      '<div>Falta pagar<b>' + fmtARS(e.saldo) + '</b></div>' +
+      '<div>Flete<b>' + fmtARS(e.totalFlete) + '</b></div>' +
+    '</div>' +
+    '<h2>📐 Presupuesto</h2>' +
+    '<table><thead><tr><th>Fecha</th><th>Detalle</th><th style="text-align:right">Monto</th></tr></thead><tbody>' + filasPresupuesto + '</tbody></table>' +
+    '<h2>💳 Pagos</h2>' +
+    '<table><thead><tr><th>Fecha</th><th>Detalle</th><th>Categoría</th><th style="text-align:right">Monto</th></tr></thead><tbody>' + filasPagos + '</tbody></table>' +
+    '<div class="foot">Finanzas Personales — módulo Quincho</div>' +
+    '</body></html>';
+
+  var w = window.open('', '_blank');
+  if (!w) { alert('El navegador bloqueó la ventana emergente. Habilitá los pop-ups para este sitio e intentá de nuevo.'); return; }
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(function() { w.print(); }, 300);
+}
+
 // ── Indicadores (resumen de todas las etapas) ────────────────
 var qnChartEtapas = null, qnChartSplit = null;
 
@@ -4424,7 +4492,11 @@ function cargarQuinchoPresupuestoPagos() {
     .withFailureHandler(function(e) { console.error(e); })
     .getQuinchoPresupuesto(QN_ETAPA_SEL);
   google.script.run
-    .withSuccessHandler(function(json) { QN_PAGOS = JSON.parse(json).rows || []; renderQuinchoPagos(); })
+    .withSuccessHandler(function(json) {
+      // Mas reciente cargado primero (mayor numero de fila = agregado despues).
+      QN_PAGOS = (JSON.parse(json).rows || []).slice().sort(function(a, b) { return b.fila - a.fila; });
+      renderQuinchoPagos();
+    })
     .withFailureHandler(function(e) { console.error(e); })
     .getQuinchoPagos(QN_ETAPA_SEL);
 }
@@ -4443,12 +4515,14 @@ function renderQuinchoPresupuesto() {
 
 function renderQuinchoPagos() {
   var body = document.getElementById('qn-pagos-body');
-  if (!QN_PAGOS.length) { body.innerHTML = '<tr><td colspan="6" class="no-data">Sin pagos cargados.</td></tr>'; return; }
+  if (!QN_PAGOS.length) { body.innerHTML = '<tr><td colspan="7" class="no-data">Sin pagos cargados.</td></tr>'; return; }
   body.innerHTML = QN_PAGOS.map(function(p) {
     var badge = p.categoria === 'Flete' ? 'b-banco-nbch' : 'b-banco-galicia';
+    var ver = p.driveFileId ? '<a class="fac-ver" target="_blank" href="https://drive.google.com/file/d/' + p.driveFileId + '/view">👁 Ver</a>' : '–';
     return '<tr><td>' + esc(p.fecha) + '</td><td>' + esc(p.mes) + '</td><td>' + esc(p.detalle) + '</td>' +
       '<td><span class="badge ' + badge + '">' + esc(p.categoria) + '</span></td>' +
       '<td style="text-align:right;font-weight:700">' + fmtARS(p.monto) + '</td>' +
+      '<td>' + ver + '</td>' +
       '<td class="qn-solo-escritura" style="white-space:nowrap">' +
       '<button class="btn btn-gray" style="padding:4px 9px" onclick="editarPagoQuinchoFila(' + p.fila + ')">✏️</button> ' +
       '<button class="btn btn-red" style="padding:4px 9px" onclick="eliminarPagoQuinchoFila(' + p.fila + ')">🗑️</button></td></tr>';
@@ -4517,6 +4591,18 @@ function actualizarMesDesdeFechaPagoQuincho() {
 }
 
 var QN_PAGOS_EDIT_FILA = null;
+var QN_PAG_COMPROBANTE_PENDIENTE = null; // { base64, mimeType } mientras hay un comprobante elegido sin guardar
+
+function seleccionarComprobantePagoQuincho(file) {
+  var info = document.getElementById('qn-pag-comprobante-info');
+  if (!file) { QN_PAG_COMPROBANTE_PENDIENTE = null; info.textContent = ''; return; }
+  var fr = new FileReader();
+  fr.onload = function(e) {
+    QN_PAG_COMPROBANTE_PENDIENTE = { base64: e.target.result.split(',')[1], mimeType: file.type || 'application/octet-stream' };
+    info.textContent = '📎 ' + file.name;
+  };
+  fr.readAsDataURL(file);
+}
 
 function guardarPagoQuinchoForm() {
   var msgEl = document.getElementById('qn-pag-msg');
@@ -4531,6 +4617,10 @@ function guardarPagoQuinchoForm() {
     categoria: document.getElementById('qn-pag-categoria').value,
     monto: monto,
   };
+  if (QN_PAG_COMPROBANTE_PENDIENTE) {
+    datos.base64 = QN_PAG_COMPROBANTE_PENDIENTE.base64;
+    datos.mimeType = QN_PAG_COMPROBANTE_PENDIENTE.mimeType;
+  }
   var editando = !!QN_PAGOS_EDIT_FILA;
   if (editando) datos.fila = QN_PAGOS_EDIT_FILA; else datos.etapaId = QN_ETAPA_SEL;
 
@@ -4559,11 +4649,17 @@ function editarPagoQuinchoFila(fila) {
   document.getElementById('qn-pag-btn-guardar').textContent = '💾';
   document.getElementById('qn-pag-btn-cancelar').style.display = '';
   document.getElementById('qn-pag-msg').className = 'msg';
+  QN_PAG_COMPROBANTE_PENDIENTE = null;
+  document.getElementById('qn-pag-comprobante').value = '';
+  document.getElementById('qn-pag-comprobante-info').textContent = p.driveFileName
+    ? '📎 Ya tiene: ' + p.driveFileName + ' (subí uno nuevo para reemplazarlo)' : '';
 }
 
 function cancelarEdicionPagoQuincho() {
   QN_PAGOS_EDIT_FILA = null;
-  ['qn-pag-fecha', 'qn-pag-mes', 'qn-pag-detalle', 'qn-pag-monto'].forEach(function(id) { document.getElementById(id).value = ''; });
+  QN_PAG_COMPROBANTE_PENDIENTE = null;
+  ['qn-pag-fecha', 'qn-pag-mes', 'qn-pag-detalle', 'qn-pag-monto', 'qn-pag-comprobante'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('qn-pag-comprobante-info').textContent = '';
   document.getElementById('qn-pag-categoria').value = 'Mano de Obra';
   document.getElementById('qn-pag-btn-guardar').textContent = '➕';
   document.getElementById('qn-pag-btn-cancelar').style.display = 'none';

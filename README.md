@@ -10,7 +10,7 @@ App de Node.js + Vercel para gestión financiera personal, con Google Sheets com
 - **Inversiones** — dashboard por broker (Cocos Capital, BullMarket, Balanz, Banco Galicia USD): importador de movimientos, carga manual de saldos, importador de "fotos" de cartera (tenencias), composición de cartera y resultado por período.
 - **Facturas IVA** — escanea una carpeta de Google Drive, analiza cada comprobante nuevo con IA (Gemini vision) y arma el registro de IVA. Detecta duplicados por Nro. de Factura + CUIT.
 - **Mercado Pago** — el usuario sube el PDF "Resumen de cuenta" de Mercado Pago; se parsea 100% client-side con pdf.js (sin backend ni IA). Dashboard con evolución de saldo, categorización de gastos.
-- **Quincho** — registro de gastos de una construcción (quincho), organizado en un árbol de etapas. Por etapa: **Materiales** (foto de comprobante analizada con IA, itemizada por producto, o carga manual; se sube a Drive), **Presupuesto** (lo que pasa el contratista) y **Pagos** (con categoría Mano de Obra / Flete — el Flete suma al total gastado pero no descuenta del presupuesto de mano de obra). Incluye un tablero de **Indicadores** con el resumen de todas las etapas (gráficos + tabla).
+- **Quincho** — registro de gastos de una construcción (quincho), organizado en un árbol de etapas. Por etapa (solapas en orden **Pagos, Materiales, Presupuesto**): **Pagos** (con categoría Mano de Obra / Flete — el Flete suma al total gastado pero no descuenta del presupuesto de mano de obra; comprobante opcional de la transferencia/pago, subido a Drive; el más reciente cargado aparece primero en la lista), **Materiales** (foto de comprobante analizada con IA, itemizada por producto, o carga manual; se sube a Drive) y **Presupuesto** (lo que pasa el contratista). Botón **🖨️ Imprimir / PDF** por etapa: abre una vista imprimible (detalle de presupuesto, detalle de pagos con fecha, y totales) para entregarle al contratista — usa `window.print()`, sin librería de PDF. Incluye un tablero de **Indicadores** con el resumen de todas las etapas (gráficos + tabla).
 - **Usuarios** — alta/edición de usuarios y permisos por módulo (solo admin).
 
 ## Arquitectura
@@ -37,6 +37,7 @@ Copiar `.env.example` a `.env` y completar:
 | `FACTURAS_DRIVE_FOLDER_ID` | Carpeta de Drive con los comprobantes (compartida como Lector) |
 | `QUINCHO_SHEET_ID` | Planilla propia de Quincho (compartida como Editor) |
 | `QUINCHO_MATERIALES_FOLDER_ID` | Carpeta de Drive para fotos de materiales (compartida como Editor) |
+| `QUINCHO_PAGOS_FOLDER_ID` | Carpeta de Drive para comprobantes de pago (compartida como Editor) |
 | `GOOGLE_DRIVE_REFRESH_TOKEN` | Ver sección Drive arriba — se genera una única vez visitando `/api/oauth?action=drive-start` con el server corriendo y pegando el valor que devuelve |
 
 Local: `node server.js` (puerto 3000, o `PORT=xxxx node server.js`).

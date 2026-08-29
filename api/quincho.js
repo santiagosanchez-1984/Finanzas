@@ -19,6 +19,7 @@ const {
 
 const QUINCHO_SHEET_ID = process.env.QUINCHO_SHEET_ID;
 const QUINCHO_MATERIALES_FOLDER_ID = process.env.QUINCHO_MATERIALES_FOLDER_ID;
+const QUINCHO_PAGOS_FOLDER_ID = process.env.QUINCHO_PAGOS_FOLDER_ID;
 
 // Todo el modulo Quincho cae bajo un unico permiso ("quincho").
 const NIVEL_POR_ACCION = {
@@ -224,25 +225,50 @@ async function accionPagos(req, res, sheets) {
   res.json({ rows });
 }
 
+// Sube el comprobante (foto o PDF de la transferencia) a la carpeta propia
+// de Pagos, si vino uno. Comun a agregar y editar.
+async function subirComprobantePago(fecha, detalle, base64, mimeType) {
+  if (!QUINCHO_PAGOS_FOLDER_ID) throw new Error('Falta configurar QUINCHO_PAGOS_FOLDER_ID');
+  const ext = mimeType.split('/')[1] || 'jpg';
+  const nombreArchivo = (fecha || 'pago') + ' - ' + (detalle || 'comprobante') + '.' + ext;
+  return subirImagenADrive(getDriveClientEscritura(), QUINCHO_PAGOS_FOLDER_ID, base64, mimeType, nombreArchivo);
+}
+
 async function accionPagosAgregar(req, res, sheets) {
-  const { etapaId, fecha, mes, detalle, monto, categoria } = req.body || {};
+  const { etapaId, fecha, mes, detalle, monto, categoria, base64, mimeType } = req.body || {};
   if (!etapaId || !fecha || !monto) return res.json({ ok: false, msg: 'Faltan datos obligatorios' });
   const cat = CATEGORIAS_PAGO.indexOf(categoria) >= 0 ? categoria : 'Mano de Obra';
   await ensureSheetExists(sheets, QUINCHO_SHEET_ID, SHEET_PAGOS, HEADER_PAGOS);
+
+  let driveFileId = '', driveFileName = '';
+  if (base64 && mimeType) {
+    const subida = await subirComprobantePago(fecha, detalle, base64, mimeType);
+    driveFileId = subida.driveFileId;
+    driveFileName = subida.driveFileName;
+  }
+
   await sheets.spreadsheets.values.append({
     spreadsheetId: QUINCHO_SHEET_ID,
-    range: `'${SHEET_PAGOS}'!A:F`,
+    range: `'${SHEET_PAGOS}'!A:H`,
     valueInputOption: 'RAW',
     insertDataOption: 'INSERT_ROWS',
-    requestBody: { values: [[etapaId, fecha, mes || '', detalle || '', monto, cat]] },
+    requestBody: { values: [[etapaId, fecha, mes || '', detalle || '', monto, cat, driveFileId, driveFileName]] },
   });
   res.json({ ok: true });
 }
 
 async function accionPagosEditar(req, res, sheets) {
-  const { fila, fecha, mes, detalle, monto, categoria } = req.body || {};
+  const { fila, fecha, mes, detalle, monto, categoria, base64, mimeType } = req.body || {};
   if (!fila || !fecha || !monto) return res.json({ ok: false, msg: 'Faltan datos obligatorios' });
-  await actualizarPago(sheets, QUINCHO_SHEET_ID, { fila, fecha, mes, detalle, monto, categoria });
+
+  let driveFileId, driveFileName;
+  if (base64 && mimeType) {
+    const subida = await subirComprobantePago(fecha, detalle, base64, mimeType);
+    driveFileId = subida.driveFileId;
+    driveFileName = subida.driveFileName;
+  }
+
+  await actualizarPago(sheets, QUINCHO_SHEET_ID, { fila, fecha, mes, detalle, monto, categoria, driveFileId, driveFileName });
   res.json({ ok: true });
 }
 
