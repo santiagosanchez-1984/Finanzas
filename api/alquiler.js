@@ -4,19 +4,24 @@
 // los permisos de usuario vienen de la planilla principal (SHEET_ID).
 const cors = require('../lib/cors');
 const { isAuthenticated } = require('../lib/auth');
-const { getSheetsClient, SHEET_ID } = require('../lib/sheets');
+const { getSheetsClient, getDriveClientEscritura, SHEET_ID } = require('../lib/sheets');
 const { leerUsuarios, buscarPorEmail, tienePermiso } = require('../lib/usuarios');
 const {
   mesValido, asegurarHojaBD, leerRegistros, agregarRegistros, actualizarRegistro,
-  eliminarFila, leerHistoricoPestanas,
+  eliminarFila, leerHistoricoPestanas, subirComprobante, quitarComprobante,
 } = require('../lib/alquiler');
 
 const ALQUILER_SHEET_ID = process.env.ALQUILER_SHEET_ID;
+// Carpeta de Drive para los comprobantes de pago (la sube la cuenta personal
+// via GOOGLE_DRIVE_REFRESH_TOKEN, igual que Quincho: el service account no
+// tiene cuota de Drive).
+const ALQUILER_COMPROBANTES_FOLDER_ID = process.env.ALQUILER_COMPROBANTES_FOLDER_ID;
 
 const NIVEL_POR_ACCION = {
   'listar': 'lectura',
   'agregar': 'escritura', 'editar': 'escritura', 'eliminar': 'escritura',
   'importar-historico': 'escritura',
+  'subir-comprobante': 'escritura', 'quitar-comprobante': 'escritura',
 };
 
 module.exports = async function(req, res) {
@@ -46,6 +51,8 @@ module.exports = async function(req, res) {
       case 'editar':             return await accionEditar(req, res, sheets);
       case 'eliminar':           return await accionEliminar(req, res, sheets);
       case 'importar-historico': return await accionImportarHistorico(req, res, sheets);
+      case 'subir-comprobante':  return await accionSubirComprobante(req, res, sheets);
+      case 'quitar-comprobante': return await accionQuitarComprobante(req, res, sheets);
     }
   } catch (e) {
     res.status(e.status || 500).json({ error: e.message, ok: false, msg: e.message });
@@ -54,7 +61,7 @@ module.exports = async function(req, res) {
 
 async function accionListar(req, res, sheets) {
   const registros = await leerRegistros(sheets, ALQUILER_SHEET_ID);
-  res.json({ registros });
+  res.json({ registros, comprobantesHabilitados: !!ALQUILER_COMPROBANTES_FOLDER_ID });
 }
 
 function validarRegistro(body) {
@@ -84,8 +91,8 @@ async function accionAgregar(req, res, sheets) {
   if (existentes.some(r => r.mes === reg.mes)) {
     return res.json({ ok: false, msg: 'Ese mes ya está cargado — editalo desde la tabla.' });
   }
-  await agregarRegistros(sheets, ALQUILER_SHEET_ID, [reg], 'manual');
-  res.json({ ok: true });
+  const fila = await agregarRegistros(sheets, ALQUILER_SHEET_ID, [reg], 'manual');
+  res.json({ ok: true, fila });
 }
 
 async function accionEditar(req, res, sheets) {
@@ -127,4 +134,24 @@ async function accionImportarHistorico(req, res, sheets) {
     importados: nuevos.length,
     omitidos: registros.length - nuevos.length,
   });
+}
+
+async function accionSubirComprobante(req, res, sheets) {
+  if (!ALQUILER_COMPROBANTES_FOLDER_ID) return res.json({ ok: false, msg: 'Falta configurar la carpeta de Drive (ALQUILER_COMPROBANTES_FOLDER_ID)' });
+  const { fila, base64, mimeType, nombre, concepto } = req.body || {};
+  const f = parseInt(fila, 10);
+  if (!f || f < 2) return res.json({ ok: false, msg: 'Fila inválida' });
+  if (!base64 || !mimeType) return res.json({ ok: false, msg: 'Falta el archivo' });
+  if (!/^(image\/|application\/pdf$)/.test(mimeType)) return res.json({ ok: false, msg: 'Solo se aceptan fotos o PDF' });
+  const comprobante = await subirComprobante(sheets, ALQUILER_SHEET_ID, getDriveClientEscritura(), ALQUILER_COMPROBANTES_FOLDER_ID,
+    { fila: f, base64, mimeType, nombre, concepto });
+  res.json({ ok: true, comprobante });
+}
+
+async function accionQuitarComprobante(req, res, sheets) {
+  const { fila, id } = req.body || {};
+  const f = parseInt(fila, 10);
+  if (!f || f < 2 || !id) return res.json({ ok: false, msg: 'Datos inválidos' });
+  await quitarComprobante(sheets, ALQUILER_SHEET_ID, f, String(id));
+  res.json({ ok: true });
 }

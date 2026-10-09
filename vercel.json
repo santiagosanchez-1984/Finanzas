@@ -6,6 +6,7 @@
   ],
   "functions": {
     "api/facturas.js": { "maxDuration": 60 },
-    "api/quincho.js": { "maxDuration": 30 }
+    "api/quincho.js": { "maxDuration": 30 },
+    "api/alquiler.js": { "maxDuration": 30 }
   }
 }

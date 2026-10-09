@@ -204,7 +204,19 @@ body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !impo
 tr.al-row-aumento td:first-child { box-shadow: inset 4px 0 0 #e67e22; }
 tr.al-row-anio td { background: #e8eef5 !important; font-weight: 800; color: #0A3560; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
 .al-acc { padding: 3px 8px !important; font-size: 12px !important; }
+a.al-acc { text-decoration: none; }
 body.alquiler-sin-escritura #tab-alquiler .al-solo-escritura { display: none !important; }
+body.alquiler-sin-escritura .al-solo-escritura { display: none !important; }
+.al-comp-chip { display: inline-flex; align-items: center; gap: 4px; background: #eef5ff; color: #1565C0; border-radius: 12px; padding: 2px 9px; font-size: 11.5px; font-weight: 700; text-decoration: none; margin: 1px 2px; white-space: nowrap; }
+.al-comp-chip:hover { background: #d6e8ff; }
+.al-comp-btn { border: 1.5px dashed #b8c9dc; background: #fafcff; color: #556; border-radius: 12px; padding: 2px 9px; font-size: 11.5px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.al-comp-btn:hover { border-color: #0A3560; color: #0A3560; }
+.al-comp-lista { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.al-comp-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #e3e9f0; border-radius: 8px; background: #fafcff; }
+.al-comp-item .nom { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.al-comp-drop { border: 2px dashed #c0cfe0; border-radius: 12px; padding: 22px; text-align: center; cursor: pointer; background: #fafcff; transition: all .15s; }
+.al-comp-drop:hover, .al-comp-drop.over { border-color: #0A3560; background: #eef5ff; }
+.al-comp-drop input { display: none; }
 @media (max-width: 900px) {
   .al-alertas, .al-dos-col { grid-template-columns: 1fr; }
   .al-form-grid { grid-template-columns: 1fr 1fr; }
@@ -1199,6 +1211,10 @@ body.alquiler-sin-escritura #tab-alquiler .al-solo-escritura { display: none !im
       <div class="f-item"><label>Fecha de pago</label><input type="date" id="al-f-fechapago"></div>
       <div class="f-item"><label>Notas</label><input type="text" id="al-f-notas"></div>
     </div>
+    <div class="al-form-grid" style="margin-top:12px" id="al-f-comp-wrap">
+      <div class="f-item" style="grid-column:span 3"><label>📎 Comprobantes de pago (opcional, fotos o PDF)</label><input type="file" id="al-f-comp" accept="image/*,application/pdf" multiple></div>
+      <div class="f-item"><label>Concepto</label><select id="al-f-comp-concepto"><option>Alquiler</option><option>Cochera</option><option>Expensas</option><option>Otro</option></select></div>
+    </div>
     <div class="al-form-total">
       <span style="font-size:12px;font-weight:800;color:#666;text-transform:uppercase;letter-spacing:.5px">Total a pagar del mes</span>
       <b id="al-f-total">$0</b>
@@ -1241,6 +1257,14 @@ body.alquiler-sin-escritura #tab-alquiler .al-solo-escritura { display: none !im
       <div class="kpi-card aho"><div class="kpi-label">Mes más caro</div><div class="kpi-val aho" id="al-kpi-anio-max">–</div><div class="kpi-sub" id="al-kpi-anio-max-sub"></div></div>
     </div>
 
+    <div class="card">
+      <h3>🗂️ Detalle mensual</h3>
+      <div class="tabla-wrap" style="max-height:560px;overflow-y:auto">
+        <table><thead><tr><th>Mes</th><th class="al-num">Alquiler</th><th class="al-num">Cochera</th><th class="al-num">Expensas</th><th class="al-num">Otros</th><th class="al-num">🔧 Arreglos</th><th class="al-num">Total pagado</th><th class="al-num">vs mes ant.</th><th>📎 Comprobantes</th><th>Notas</th><th class="al-solo-escritura"></th></tr></thead>
+        <tbody id="al-detalle-body"></tbody></table>
+      </div>
+    </div>
+
     <div class="charts-grid">
       <div class="card"><h3>Pagos por mes</h3><div class="chart-wrap"><canvas id="al-chart-mensual"></canvas></div></div>
       <div class="card"><h3>Composición</h3><div class="chart-wrap"><canvas id="al-chart-split"></canvas></div></div>
@@ -1279,17 +1303,36 @@ body.alquiler-sin-escritura #tab-alquiler .al-solo-escritura { display: none !im
       </div>
     </div>
 
-    <div class="card">
-      <h3>🗂️ Detalle mensual</h3>
-      <div class="tabla-wrap" style="max-height:560px;overflow-y:auto">
-        <table><thead><tr><th>Mes</th><th class="al-num">Alquiler</th><th class="al-num">Cochera</th><th class="al-num">Expensas</th><th class="al-num">Otros</th><th class="al-num">🔧 Arreglos</th><th class="al-num">Total pagado</th><th class="al-num">vs mes ant.</th><th>Notas</th><th class="al-solo-escritura"></th></tr></thead>
-        <tbody id="al-detalle-body"></tbody></table>
-      </div>
-    </div>
   </div>
 </div>
 
 </main>
+
+<!-- ═══ MODAL: Comprobantes de un mes de Alquiler ═══ -->
+<div id="al-comp-modal" class="fac-modal-backdrop" onclick="if(event.target===this)cerrarComprobantesAlquiler()">
+  <div class="card fac-modal-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h3 style="margin:0" id="al-comp-titulo">📎 Comprobantes</h3>
+      <button class="btn btn-gray" onclick="cerrarComprobantesAlquiler()" style="padding:4px 10px">✕</button>
+    </div>
+    <div id="al-comp-lista" class="al-comp-lista"></div>
+    <div class="al-solo-escritura" id="al-comp-subir">
+      <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:10px">
+        <div class="f-item" style="flex:1"><label>Concepto</label>
+          <select id="al-comp-concepto"><option>Alquiler</option><option>Cochera</option><option>Expensas</option><option>Otro</option></select></div>
+      </div>
+      <div class="al-comp-drop" id="al-comp-drop" onclick="document.getElementById('al-comp-file').click()"
+           ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')"
+           ondrop="event.preventDefault();this.classList.remove('over');subirArchivosComprobanteAlquiler(event.dataTransfer.files)">
+        <div style="font-size:30px">📤</div>
+        <div style="font-weight:800;color:#0A3560;margin-top:4px">Subí la foto o el PDF del comprobante</div>
+        <div style="font-size:12px;color:#888;margin-top:2px">Tocá acá o arrastrá uno o varios archivos · se guardan en tu carpeta de Drive</div>
+        <input type="file" id="al-comp-file" accept="image/*,application/pdf" multiple onchange="subirArchivosComprobanteAlquiler(this.files);this.value=''">
+      </div>
+    </div>
+    <div id="al-comp-msg" class="msg"></div>
+  </div>
+</div>
 
 <!-- ═══ MODAL: Editar factura ═══ -->
 <div id="fac-edit-modal" class="fac-modal-backdrop">
@@ -1498,6 +1541,12 @@ function makeRunner() {
       finish(apiCall('/api/alquiler?action=eliminar', { method: 'POST', body: JSON.stringify({ fila: fila }) }));
     },
     importarHistoricoAlquiler:function() { finish(apiCall('/api/alquiler?action=importar-historico', { method: 'POST' })); },
+    subirComprobanteAlquiler:function(dataJson) {
+      finish(apiCall('/api/alquiler?action=subir-comprobante', { method: 'POST', body: dataJson }));
+    },
+    quitarComprobanteAlquiler:function(fila, id) {
+      finish(apiCall('/api/alquiler?action=quitar-comprobante', { method: 'POST', body: JSON.stringify({ fila: fila, id: id }) }));
+    },
   };
   return runner;
 }
@@ -4901,6 +4950,8 @@ function eliminarPagoQuinchoFila(fila) {
 var AL_REGISTROS = [];   // ordenados por mes ascendente (asi los devuelve el server)
 var AL_ANIO_SEL = '';    // '' = todo el historico
 var AL_EDIT_FILA = null;
+var AL_COMP_OK = false;     // hay carpeta de Drive configurada para comprobantes
+var AL_COMP_FILA = null;    // mes abierto en el modal de comprobantes
 var alChartMensual = null, alChartSplit = null, alChartEvolucion = null;
 var AL_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 var AL_MESES_CORTO = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
@@ -4945,8 +4996,12 @@ function alBruto(r) { return r.total + (r.descuento || 0); }
 function cargarAlquiler() {
   google.script.run
     .withSuccessHandler(function(json) {
-      AL_REGISTROS = JSON.parse(json).registros || [];
+      var d = JSON.parse(json);
+      AL_REGISTROS = d.registros || [];
+      AL_COMP_OK = !!d.comprobantesHabilitados;
+      document.getElementById('al-f-comp-wrap').style.display = AL_COMP_OK ? '' : 'none';
       renderAlquiler();
+      if (AL_COMP_FILA) renderComprobantesModalAlquiler();
     })
     .withFailureHandler(function(e) {
       document.getElementById('al-hero-sub').textContent = 'No se pudo cargar';
@@ -5245,14 +5300,14 @@ function renderResumenAniosAlquiler() {
 
 function renderDetalleAlquiler(regs) {
   var body = document.getElementById('al-detalle-body');
-  if (!regs.length) { body.innerHTML = '<tr><td colspan="10" class="no-data">Sin meses para mostrar.</td></tr>'; return; }
+  if (!regs.length) { body.innerHTML = '<tr><td colspan="11" class="no-data">Sin meses para mostrar.</td></tr>'; return; }
   var escritura = puede('alquiler', 'escritura');
   var html = '', anioActual = null;
   regs.slice().reverse().forEach(function(r) {
     var anio = r.mes.slice(0, 4);
     if (!AL_ANIO_SEL && anio !== anioActual) {
       anioActual = anio;
-      html += '<tr class="al-row-anio"><td colspan="10">📅 ' + anio + '</td></tr>';
+      html += '<tr class="al-row-anio"><td colspan="11">📅 ' + anio + '</td></tr>';
     }
     var idx = AL_REGISTROS.indexOf(r);
     var prev = idx > 0 ? AL_REGISTROS[idx - 1] : null;
@@ -5273,6 +5328,7 @@ function renderDetalleAlquiler(regs) {
       '<td class="al-num">' + (r.descuento ? '<span class="al-desc">-' + fmtARS(r.descuento) + '</span>' : '<span class="pct-neu">–</span>') + '</td>' +
       '<td class="al-num"><b>' + fmtARS(r.total) + '</b></td>' +
       '<td class="al-num">' + (prev ? alFmtPct(alPct(alBruto(prev), alBruto(r))) : '<span class="pct-neu">–</span>') + '</td>' +
+      '<td style="white-space:normal;max-width:260px">' + celdaComprobantesAlquiler(r, escritura) + '</td>' +
       '<td style="white-space:normal;max-width:320px;font-size:12px">' + notas.join(' · ') + '</td>' +
       (escritura
         ? '<td class="al-solo-escritura" style="white-space:nowrap">' +
@@ -5305,6 +5361,7 @@ function abrirFormAlquiler(reg) {
   document.getElementById('al-f-fechapago').value = fechaDDMMYYYYaISO(base.fechaPago);
   document.getElementById('al-f-notas').value = base.notas || '';
   document.getElementById('al-form-msg').className = 'msg';
+  document.getElementById('al-f-comp').value = '';
   actualizarTotalFormAlquiler();
   var card = document.getElementById('al-form-card');
   card.style.display = 'block';
@@ -5349,9 +5406,21 @@ function guardarFormAlquiler() {
       var r = JSON.parse(json);
       if (!r.ok) { mostrarMsg('al-form-msg', r.msg || 'No se pudo guardar', 'error'); return; }
       var editando = !!AL_EDIT_FILA;
+      var filaGuardada = editando ? AL_EDIT_FILA : r.fila;
+      var archivos = Array.prototype.slice.call(document.getElementById('al-f-comp').files || []);
+      var concepto = document.getElementById('al-f-comp-concepto').value;
       cerrarFormAlquiler();
-      mostrarMsg('al-msg-global', (editando ? '✅ Se actualizó ' : '✅ Se cargó ') + alNombreMes(data.mes) + '.', 'ok');
-      cargarAlquiler();
+      var txt = (editando ? '✅ Se actualizó ' : '✅ Se cargó ') + alNombreMes(data.mes);
+      if (!archivos.length || !AL_COMP_OK || !filaGuardada) {
+        mostrarMsg('al-msg-global', txt + '.', 'ok');
+        cargarAlquiler();
+        return;
+      }
+      mostrarMsg('al-msg-global', txt + ' · subiendo ' + archivos.length + (archivos.length === 1 ? ' comprobante' : ' comprobantes') + ' a Drive…', 'info');
+      subirArchivosSecuencialAlquiler(filaGuardada, archivos, concepto, function(ok, errores) {
+        mostrarMsg('al-msg-global', txt + ' · 📎 ' + ok + ' comprobante(s) en Drive' + (errores.length ? ' · ⚠️ ' + errores.join(' | ') : '') + '.', errores.length ? 'error' : 'ok');
+        cargarAlquiler();
+      });
     })
     .withFailureHandler(function(e) { fin(); mostrarMsg('al-form-msg', 'Error: ' + e.message, 'error'); });
   if (AL_EDIT_FILA) runner.editarAlquiler(JSON.stringify(data));
@@ -5391,6 +5460,122 @@ function importarHistoricoAlquiler() {
       mostrarMsg('al-msg-global', 'Error al importar: ' + e.message, 'error');
     })
     .importarHistoricoAlquiler();
+}
+
+// ── Alquiler: comprobantes de pago en Drive ─────────────────
+function alDriveUrl(id) { return 'https://drive.google.com/file/d/' + encodeURIComponent(id) + '/view'; }
+var AL_ICONO_CONCEPTO = { Alquiler: '🏠', Cochera: '🚗', Expensas: '🏢', Otro: '📄' };
+
+function celdaComprobantesAlquiler(r, escritura) {
+  var chips = (r.comprobantes || []).map(function(c) {
+    return '<a class="al-comp-chip" href="' + alDriveUrl(c.id) + '" target="_blank" rel="noopener" title="' + alEsc(c.nombre) + '">' +
+      (AL_ICONO_CONCEPTO[c.concepto] || '📄') + ' ' + alEsc(c.concepto || 'Comprobante') + '</a>';
+  }).join('');
+  var boton = (escritura && AL_COMP_OK) || (r.comprobantes || []).length
+    ? '<button class="al-comp-btn" onclick="abrirComprobantesAlquiler(' + r.fila + ')">' + ((r.comprobantes || []).length ? '📎 ver' : '📎 subir') + '</button>'
+    : '';
+  return chips + boton;
+}
+
+function abrirComprobantesAlquiler(fila) {
+  AL_COMP_FILA = fila;
+  document.getElementById('al-comp-msg').className = 'msg';
+  renderComprobantesModalAlquiler();
+  document.getElementById('al-comp-modal').classList.add('show');
+}
+
+function cerrarComprobantesAlquiler() {
+  AL_COMP_FILA = null;
+  document.getElementById('al-comp-modal').classList.remove('show');
+}
+
+function renderComprobantesModalAlquiler() {
+  var r = AL_REGISTROS.find(function(x) { return x.fila === AL_COMP_FILA; });
+  if (!r) { cerrarComprobantesAlquiler(); return; }
+  document.getElementById('al-comp-titulo').textContent = '📎 Comprobantes · ' + alNombreMes(r.mes);
+  var escritura = puede('alquiler', 'escritura');
+  var lista = r.comprobantes || [];
+  document.getElementById('al-comp-lista').innerHTML = lista.length
+    ? lista.map(function(c) {
+        return '<div class="al-comp-item"><span style="font-size:20px">' + (AL_ICONO_CONCEPTO[c.concepto] || '📄') + '</span>' +
+          '<span class="nom"><b>' + alEsc(c.concepto) + '</b><br><span style="font-size:11.5px;color:#888">' + alEsc(c.nombre) + '</span></span>' +
+          '<a class="btn btn-gray al-acc" href="' + alDriveUrl(c.id) + '" target="_blank" rel="noopener">👁 Ver</a>' +
+          (escritura ? '<button class="btn btn-gray al-acc" onclick="quitarComprobanteAlquilerUI(\'' + alEsc(c.id) + '\')" title="Quitar de este mes">✕</button>' : '') +
+          '</div>';
+      }).join('')
+    : '<div class="no-data" style="padding:14px">Todavía no hay comprobantes para este mes.</div>';
+  document.getElementById('al-comp-subir').style.display = escritura && AL_COMP_OK ? '' : 'none';
+  if (escritura && !AL_COMP_OK) mostrarMsg('al-comp-msg', 'Falta configurar la carpeta de Drive para poder subir comprobantes.', 'info');
+}
+
+// Reduce fotos grandes (camara del celu) antes de subirlas: Vercel limita el
+// tamaño del request. Los PDF se mandan tal cual.
+function prepararArchivoComprobanteAlquiler(file) {
+  return new Promise(function(resolve, reject) {
+    var esPdf = file.type === 'application/pdf';
+    if (!esPdf && !/^image\//.test(file.type)) { reject(new Error(file.name + ': solo fotos o PDF')); return; }
+    var fr = new FileReader();
+    fr.onerror = function() { reject(new Error(file.name + ': no se pudo leer')); };
+    fr.onload = function(e) {
+      var dataUrl = e.target.result;
+      if (esPdf || file.size < 900 * 1024) {
+        if (file.size > 3.2 * 1024 * 1024) { reject(new Error(file.name + ': supera 3 MB')); return; }
+        resolve({ base64: dataUrl.split(',')[1], mimeType: file.type, nombre: file.name });
+        return;
+      }
+      var img = new Image();
+      img.onerror = function() { reject(new Error(file.name + ': imagen inválida')); };
+      img.onload = function() {
+        var max = 1800, w = img.width, h = img.height;
+        if (w > max || h > max) { var k = max / Math.max(w, h); w = Math.round(w * k); h = Math.round(h * k); }
+        var cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        cv.getContext('2d').drawImage(img, 0, 0, w, h);
+        var out = cv.toDataURL('image/jpeg', 0.82);
+        resolve({ base64: out.split(',')[1], mimeType: 'image/jpeg', nombre: file.name.replace(/\.[a-z0-9]+$/i, '') + '.jpg' });
+      };
+      img.src = dataUrl;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+
+function subirArchivosSecuencialAlquiler(fila, archivos, concepto, done) {
+  var ok = 0, errores = [], i = 0;
+  function siguiente() {
+    if (i >= archivos.length) { done(ok, errores); return; }
+    var file = archivos[i++];
+    prepararArchivoComprobanteAlquiler(file).then(function(a) {
+      google.script.run
+        .withSuccessHandler(function(json) {
+          var r = JSON.parse(json);
+          if (r.ok) ok++; else errores.push(file.name + ': ' + (r.msg || 'error'));
+          siguiente();
+        })
+        .withFailureHandler(function(e) { errores.push(file.name + ': ' + e.message); siguiente(); })
+        .subirComprobanteAlquiler(JSON.stringify({ fila: fila, base64: a.base64, mimeType: a.mimeType, nombre: a.nombre, concepto: concepto }));
+    }).catch(function(e) { errores.push(e.message); siguiente(); });
+  }
+  siguiente();
+}
+
+function subirArchivosComprobanteAlquiler(files) {
+  var archivos = Array.prototype.slice.call(files || []);
+  if (!archivos.length || !AL_COMP_FILA) return;
+  var concepto = document.getElementById('al-comp-concepto').value;
+  mostrarMsg('al-comp-msg', 'Subiendo ' + archivos.length + (archivos.length === 1 ? ' archivo' : ' archivos') + ' a Drive…', 'info');
+  subirArchivosSecuencialAlquiler(AL_COMP_FILA, archivos, concepto, function(ok, errores) {
+    mostrarMsg('al-comp-msg', errores.length ? '⚠️ ' + errores.join(' | ') : '✅ ' + ok + (ok === 1 ? ' comprobante subido' : ' comprobantes subidos') + '.', errores.length ? 'error' : 'ok');
+    cargarAlquiler();
+  });
+}
+
+function quitarComprobanteAlquilerUI(id) {
+  if (!confirm('¿Quitar este comprobante del mes? El archivo queda igual en tu carpeta de Drive.')) return;
+  google.script.run
+    .withSuccessHandler(function() { mostrarMsg('al-comp-msg', 'Comprobante quitado del mes.', 'info'); cargarAlquiler(); })
+    .withFailureHandler(function(e) { mostrarMsg('al-comp-msg', 'Error: ' + e.message, 'error'); })
+    .quitarComprobanteAlquiler(AL_COMP_FILA, id);
 }
 </script>
 </body>
