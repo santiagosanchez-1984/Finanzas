@@ -164,6 +164,52 @@ body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !impo
   .qn-layout { grid-template-columns: 1fr; }
 }
 
+/* ── Alquiler ── */
+.al-hero { background: linear-gradient(135deg, #0A3560 0%, #1a5a9a 60%, #2980b9 100%); color: #fff; border-radius: 14px; padding: 22px 26px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; box-shadow: 0 4px 18px rgba(10,53,96,.25); }
+.al-hero h2 { color: #fff; margin: 0; font-size: 21px; }
+.al-hero p { font-size: 12.5px; opacity: .8; margin-top: 4px; }
+.al-hero .btn-gray { background: rgba(255,255,255,.16); color: #fff; }
+.al-hero .btn-gray:hover { background: rgba(255,255,255,.28); }
+.al-alertas { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+.al-alerta { display: flex; align-items: center; gap: 14px; background: #fff; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 8px rgba(0,0,0,.07); border-left: 6px solid #d0dce8; }
+.al-alerta .al-ico { font-size: 30px; line-height: 1; }
+.al-alerta .al-tit { font-size: 11px; font-weight: 800; color: #999; text-transform: uppercase; letter-spacing: .5px; }
+.al-alerta .al-txt { font-size: 18px; font-weight: 900; color: #1a2940; margin: 3px 0 2px; }
+.al-alerta .al-sub { font-size: 12px; color: #888; }
+.al-alerta.ok   { border-left-color: #27ae60; background: #f3fbf6; }
+.al-alerta.warn { border-left-color: #e67e22; background: #fff8f0; }
+.al-alerta.info { border-left-color: #8e44ad; background: #faf5fd; }
+.kpi-card.al-alq { border-top-color: #2980b9; } .kpi-val.al-alq { color: #2980b9; }
+.kpi-card.al-coc { border-top-color: #8e44ad; } .kpi-val.al-coc { color: #8e44ad; }
+.kpi-card.al-exp { border-top-color: #e67e22; } .kpi-val.al-exp { color: #e67e22; }
+.kpi-card.al-tot { border-top-color: #0A3560; } .kpi-val.al-tot { color: #0A3560; }
+.al-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+.al-chip { padding: 7px 16px; border-radius: 20px; border: 1.5px solid #d0dce8; background: #fff; font-size: 13px; font-weight: 700; color: #555; cursor: pointer; transition: all .15s; }
+.al-chip:hover { border-color: #0A3560; color: #0A3560; }
+.al-chip.active { background: #0A3560; border-color: #0A3560; color: #fff; }
+.al-form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.al-form-total { display: flex; justify-content: space-between; align-items: center; background: #f0f4f8; border-radius: 10px; padding: 12px 18px; margin-top: 14px; }
+.al-form-total b { font-size: 22px; color: #0A3560; }
+.al-dos-col { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.4fr); gap: 16px; }
+.al-dos-col > .card { min-width: 0; }
+.al-dos-col tbody td, .al-dos-col thead th { padding: 8px 9px; }
+.al-num { text-align: right !important; font-variant-numeric: tabular-nums; }
+.al-badge-alq { background: #E3F2FD; color: #1565C0; }
+.al-badge-coc { background: #F3E5F5; color: #6A1B9A; }
+.al-badge-up  { background: #FFF3E0; color: #E65100; }
+.al-badge-arr { background: #E8F5E9; color: #2E7D32; }
+.al-desc { color: #27ae60; font-weight: 700; }
+.al-var-up   { color: #e74c3c; font-weight: 800; font-size: 11.5px; }
+.al-var-down { color: #27ae60; font-weight: 800; font-size: 11.5px; }
+tr.al-row-aumento td:first-child { box-shadow: inset 4px 0 0 #e67e22; }
+tr.al-row-anio td { background: #e8eef5 !important; font-weight: 800; color: #0A3560; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+.al-acc { padding: 3px 8px !important; font-size: 12px !important; }
+body.alquiler-sin-escritura #tab-alquiler .al-solo-escritura { display: none !important; }
+@media (max-width: 900px) {
+  .al-alertas, .al-dos-col { grid-template-columns: 1fr; }
+  .al-form-grid { grid-template-columns: 1fr 1fr; }
+}
+
 /* ── Modal editar factura ── */
 .fac-modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(10,20,35,.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
 .fac-modal-backdrop.show { display: flex; }
@@ -211,6 +257,7 @@ body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !impo
   <button id="nav-facturas" onclick="showTab('facturas')">🧾 Facturas IVA</button>
   <button id="nav-mercadopago" onclick="showTab('mercadopago')">💳 Mercado Pago</button>
   <button id="nav-quincho" onclick="showTab('quincho')">🏗️ Quincho</button>
+  <button id="nav-alquiler" onclick="showTab('alquiler')">🏠 Alquiler</button>
   <button id="nav-usuarios" onclick="showTab('usuarios')" style="display:none">👤 Usuarios</button>
 </nav>
 
@@ -1118,6 +1165,130 @@ body.quincho-sin-escritura #tab-quincho .qn-solo-escritura { display: none !impo
   </div>
 </div>
 
+<!-- ═══ ALQUILER ═══ -->
+<div id="tab-alquiler" class="tab-content">
+  <div class="al-hero">
+    <div>
+      <h2>🏠 Alquiler · Depto + Cochera + Expensas</h2>
+      <p id="al-hero-sub">Cargando...</p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-gray al-solo-escritura" onclick="importarHistoricoAlquiler()" id="al-btn-importar">
+        <span class="spinner" id="al-sp-importar"></span><span>📥 Importar histórico</span>
+      </button>
+      <button class="btn btn-green al-solo-escritura" onclick="abrirFormAlquiler()">➕ Cargar mes</button>
+    </div>
+  </div>
+  <div id="al-msg-global" class="msg" style="margin:-6px 0 14px"></div>
+
+  <!-- Formulario alta / edición -->
+  <div class="card" id="al-form-card" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h3 style="margin:0" id="al-form-titulo">➕ Cargar mes</h3>
+      <button class="btn btn-gray" style="padding:4px 10px" onclick="cerrarFormAlquiler()">✕</button>
+    </div>
+    <div class="al-form-grid">
+      <div class="f-item"><label>Mes</label><input type="month" id="al-f-mes"></div>
+      <div class="f-item"><label>🏠 Alquiler</label><input type="number" step="0.01" id="al-f-alquiler" oninput="actualizarTotalFormAlquiler()"></div>
+      <div class="f-item"><label>🚗 Cochera</label><input type="number" step="0.01" id="al-f-cochera" oninput="actualizarTotalFormAlquiler()"></div>
+      <div class="f-item"><label>🏢 Expensas</label><input type="number" step="0.01" id="al-f-expensas" oninput="actualizarTotalFormAlquiler()"></div>
+      <div class="f-item"><label>➕ Otros (opcional)</label><input type="number" step="0.01" id="al-f-otros" oninput="actualizarTotalFormAlquiler()"></div>
+      <div class="f-item"><label>Detalle otros</label><input type="text" id="al-f-detalle" placeholder="Ej: gasto extraordinario"></div>
+      <div class="f-item"><label>🔧 Arreglo descontado</label><input type="number" step="0.01" min="0" id="al-f-descuento" oninput="actualizarTotalFormAlquiler()" placeholder="Se resta del total"></div>
+      <div class="f-item"><label>Detalle del arreglo</label><input type="text" id="al-f-detalle-desc" placeholder="Ej: termotanque (cuota 1/2)"></div>
+      <div class="f-item"><label>Fecha de pago</label><input type="date" id="al-f-fechapago"></div>
+      <div class="f-item"><label>Notas</label><input type="text" id="al-f-notas"></div>
+    </div>
+    <div class="al-form-total">
+      <span style="font-size:12px;font-weight:800;color:#666;text-transform:uppercase;letter-spacing:.5px">Total a pagar del mes</span>
+      <b id="al-f-total">$0</b>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:14px">
+      <button class="btn btn-primary" onclick="guardarFormAlquiler()" id="al-btn-guardar">
+        <span class="spinner" id="al-sp-guardar"></span><span id="al-txt-guardar">💾 Guardar</span>
+      </button>
+      <button class="btn btn-gray" onclick="cerrarFormAlquiler()">Cancelar</button>
+    </div>
+    <div id="al-form-msg" class="msg"></div>
+  </div>
+
+  <div id="al-vacio" class="card" style="display:none;text-align:center;padding:44px 20px">
+    <div style="font-size:44px;margin-bottom:10px">📭</div>
+    <h3>Todavía no hay meses cargados</h3>
+    <p style="color:#888;max-width:420px;margin:8px auto 0">Usá <b>📥 Importar histórico</b> para traer todo lo que tenés en las pestañas por año de la planilla (2023, 2024, 2025, 2026), o cargá un mes a mano.</p>
+  </div>
+
+  <div id="al-contenido" style="display:none">
+    <div class="al-alertas">
+      <div class="al-alerta" id="al-alerta-mes"><div class="al-ico" id="al-alerta-mes-ico">–</div>
+        <div><div class="al-tit">Mes en curso</div><div class="al-txt" id="al-alerta-mes-txt">–</div><div class="al-sub" id="al-alerta-mes-sub"></div></div></div>
+      <div class="al-alerta info"><div class="al-ico">📅</div>
+        <div><div class="al-tit">Próximo aumento estimado</div><div class="al-txt" id="al-alerta-aum-txt">–</div><div class="al-sub" id="al-alerta-aum-sub"></div></div></div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card al-tot"><div class="kpi-label">Total último mes</div><div class="kpi-val al-tot" id="al-kpi-total">–</div><div class="kpi-sub" id="al-kpi-total-sub"></div></div>
+      <div class="kpi-card al-alq"><div class="kpi-label">🏠 Alquiler vigente</div><div class="kpi-val al-alq" id="al-kpi-alquiler">–</div><div class="kpi-sub" id="al-kpi-alquiler-sub"></div></div>
+      <div class="kpi-card al-coc"><div class="kpi-label">🚗 Cochera vigente</div><div class="kpi-val al-coc" id="al-kpi-cochera">–</div><div class="kpi-sub" id="al-kpi-cochera-sub"></div></div>
+      <div class="kpi-card al-exp"><div class="kpi-label">🏢 Expensas último mes</div><div class="kpi-val al-exp" id="al-kpi-expensas">–</div><div class="kpi-sub" id="al-kpi-expensas-sub"></div></div>
+    </div>
+
+    <div class="al-chips" id="al-chips"></div>
+
+    <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kpi-card al-tot"><div class="kpi-label" id="al-kpi-anio-lbl">Total pagado</div><div class="kpi-val al-tot" id="al-kpi-anio-total">–</div><div class="kpi-sub" id="al-kpi-anio-sub"></div></div>
+      <div class="kpi-card bal"><div class="kpi-label">Promedio mensual</div><div class="kpi-val bal-pos" id="al-kpi-anio-prom">–</div><div class="kpi-sub" id="al-kpi-anio-prom-sub"></div></div>
+      <div class="kpi-card aho"><div class="kpi-label">Mes más caro</div><div class="kpi-val aho" id="al-kpi-anio-max">–</div><div class="kpi-sub" id="al-kpi-anio-max-sub"></div></div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="card"><h3>Pagos por mes</h3><div class="chart-wrap"><canvas id="al-chart-mensual"></canvas></div></div>
+      <div class="card"><h3>Composición</h3><div class="chart-wrap"><canvas id="al-chart-split"></canvas></div></div>
+    </div>
+
+    <div class="card">
+      <h3>📈 Evolución de cada concepto (todo el histórico)</h3>
+      <div class="chart-wrap" style="height:280px"><canvas id="al-chart-evolucion"></canvas></div>
+    </div>
+
+    <div class="al-dos-col">
+      <div class="card">
+        <h3>⬆️ Historial de aumentos</h3>
+        <div class="tabla-wrap tabla-scroll">
+          <table><thead><tr><th>Desde</th><th>Concepto</th><th class="al-num">Antes</th><th class="al-num">Ahora</th><th class="al-num">Aumento</th><th class="al-num">Meses</th></tr></thead>
+          <tbody id="al-aumentos-body"></tbody></table>
+        </div>
+      </div>
+      <div class="card">
+        <h3>📆 Resumen por año</h3>
+        <div class="tabla-wrap tabla-scroll">
+          <table><thead><tr><th>Año</th><th class="al-num">Meses</th><th class="al-num">Alquiler</th><th class="al-num">Cochera</th><th class="al-num">Expensas</th><th class="al-num">🔧 Arreglos</th><th class="al-num">Total</th><th class="al-num">Prom./mes</th><th class="al-num">vs año ant.</th></tr></thead>
+          <tbody id="al-anios-body"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="al-arreglos-card" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <h3 style="margin:0">🔧 Arreglos descontados del alquiler</h3>
+        <span class="badge al-badge-arr" style="font-size:13px;padding:5px 12px" id="al-arreglos-total"></span>
+      </div>
+      <div class="tabla-wrap">
+        <table><thead><tr><th>Mes</th><th>Detalle</th><th class="al-num">Descontado</th><th class="al-num">Total bruto</th><th class="al-num">Pagado</th></tr></thead>
+        <tbody id="al-arreglos-body"></tbody></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🗂️ Detalle mensual</h3>
+      <div class="tabla-wrap" style="max-height:560px;overflow-y:auto">
+        <table><thead><tr><th>Mes</th><th class="al-num">Alquiler</th><th class="al-num">Cochera</th><th class="al-num">Expensas</th><th class="al-num">Otros</th><th class="al-num">🔧 Arreglos</th><th class="al-num">Total pagado</th><th class="al-num">vs mes ant.</th><th>Notas</th><th class="al-solo-escritura"></th></tr></thead>
+        <tbody id="al-detalle-body"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
 </main>
 
 <!-- ═══ MODAL: Editar factura ═══ -->
@@ -1316,6 +1487,17 @@ function makeRunner() {
     eliminarPagoQuincho:function(fila) {
       finish(apiCall('/api/quincho?action=pagos-eliminar', { method: 'POST', body: JSON.stringify({ fila: fila }) }));
     },
+    getAlquiler:function() { finish(apiCall('/api/alquiler?action=listar')); },
+    agregarAlquiler:function(dataJson) {
+      finish(apiCall('/api/alquiler?action=agregar', { method: 'POST', body: dataJson }));
+    },
+    editarAlquiler:function(dataJson) {
+      finish(apiCall('/api/alquiler?action=editar', { method: 'POST', body: dataJson }));
+    },
+    eliminarAlquiler:function(fila) {
+      finish(apiCall('/api/alquiler?action=eliminar', { method: 'POST', body: JSON.stringify({ fila: fila }) }));
+    },
+    importarHistoricoAlquiler:function() { finish(apiCall('/api/alquiler?action=importar-historico', { method: 'POST' })); },
   };
   return runner;
 }
@@ -1325,7 +1507,7 @@ function cerrarSesion() {
   apiCall('/api/logout', { method: 'POST' }).finally(function() { location.reload(); });
 }
 
-var TABS   = ['dashboard','movimientos','sueldos','evolucion','inversiones','facturas','mercadopago','quincho','usuarios'];
+var TABS   = ['dashboard','movimientos','sueldos','evolucion','inversiones','facturas','mercadopago','quincho','alquiler','usuarios'];
 var metaDatos = { meses: [], bancos: [], cats: [], tipos: [] };
 var chartMensual = null, chartCats = null, chartSubcat = null, chartSueldos = null, chartEvolucion = null;
 var sueldosTodos = [], evolucionDatos = [];
@@ -1429,16 +1611,17 @@ function categorizarRow(desc) {
 
 // ── Permisos por modulo ──────────────────────────────────────
 var YO = null;
-var MODULOS = ['dashboard', 'movimientos', 'inversiones', 'facturas', 'mercadopago', 'quincho'];
+var MODULOS = ['dashboard', 'movimientos', 'inversiones', 'facturas', 'mercadopago', 'quincho', 'alquiler'];
 var MODULO_LABEL = {
   dashboard: 'Inicio', movimientos: 'Movimientos (+ Importar, Sueldos y Evolución)',
   inversiones: 'Inversiones', facturas: 'Facturas IVA', mercadopago: 'Mercado Pago', quincho: 'Quincho',
+  alquiler: 'Alquiler',
 };
 // A que modulo pertenece cada pestaña de nav (varias pestañas comparten modulo).
 var MODULO_POR_TAB = {
   dashboard: 'dashboard', movimientos: 'movimientos',
   sueldos: 'movimientos', evolucion: 'movimientos', inversiones: 'inversiones', facturas: 'facturas',
-  mercadopago: 'mercadopago', quincho: 'quincho',
+  mercadopago: 'mercadopago', quincho: 'quincho', alquiler: 'alquiler',
 };
 
 function puede(modulo, nivel) {
@@ -1485,6 +1668,9 @@ function aplicarPermisosUI() {
   }
   if (!puede('quincho', 'escritura')) {
     document.body.classList.add('quincho-sin-escritura');
+  }
+  if (!puede('alquiler', 'escritura')) {
+    document.body.classList.add('alquiler-sin-escritura');
   }
 
   if (!primerTabVisible && YO.rol !== 'admin') {
@@ -1597,6 +1783,7 @@ function showTab(nombre) {
   if (nombre === 'facturas')    cargarFacturas();
   if (nombre === 'mercadopago') cargarMercadoPago();
   if (nombre === 'quincho')     cargarQuincho();
+  if (nombre === 'alquiler')    cargarAlquiler();
   if (nombre === 'usuarios')    cargarUsuarios();
 }
 
@@ -4709,6 +4896,501 @@ function eliminarPagoQuinchoFila(fila) {
     .withSuccessHandler(function() { cancelarEdicionPagoQuincho(); cargarQuinchoPresupuestoPagos(); cargarQuincho(); })
     .withFailureHandler(function(e) { alert('Error al eliminar: ' + e.message); })
     .eliminarPagoQuincho(fila);
+}
+// ── Alquiler (depto + cochera + expensas) ────────────────────
+var AL_REGISTROS = [];   // ordenados por mes ascendente (asi los devuelve el server)
+var AL_ANIO_SEL = '';    // '' = todo el historico
+var AL_EDIT_FILA = null;
+var alChartMensual = null, alChartSplit = null, alChartEvolucion = null;
+var AL_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+var AL_MESES_CORTO = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+var AL_COLORES = { alquiler: '#2980b9', cochera: '#8e44ad', expensas: '#e67e22', otros: '#95a5a6', total: '#0A3560' };
+var AL_LABEL = { alquiler: '🏠 Alquiler', cochera: '🚗 Cochera' };
+// El alquiler y la cochera se actualizan cada 6 meses (contrato).
+var AL_MESES_ENTRE_AUMENTOS = 6;
+
+function alEsc(s) {
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function alNombreMes(mes, corto) {
+  var p = mes.split('-'), i = parseInt(p[1], 10) - 1;
+  return corto ? AL_MESES_CORTO[i] + ' ' + p[0].slice(2) : AL_MESES[i] + ' ' + p[0];
+}
+function alSumarMeses(mes, n) {
+  var p = mes.split('-');
+  var d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1 + n, 1);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+function alMesesEntre(desde, hasta) {
+  var a = desde.split('-'), b = hasta.split('-');
+  return (parseInt(b[0], 10) - parseInt(a[0], 10)) * 12 + (parseInt(b[1], 10) - parseInt(a[1], 10));
+}
+function alMesActual() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+function alPct(antes, ahora) { return antes ? (ahora - antes) / antes * 100 : null; }
+function alFmtPct(p) {
+  if (p === null || p === undefined || !isFinite(p)) return '<span class="pct-neu">–</span>';
+  if (Math.abs(p) < 0.05) return '<span class="pct-neu">=</span>';
+  var txt = (p > 0 ? '▲ +' : '▼ ') + p.toFixed(1).replace('.', ',') + '%';
+  return '<span class="' + (p > 0 ? 'al-var-up' : 'al-var-down') + '">' + txt + '</span>';
+}
+function alFmtPctTexto(p) { return (p > 0 ? '+' : '') + p.toFixed(1).replace('.', ',') + '%'; }
+function alTicksK(v) { return '$' + Math.round(v / 1000) + 'k'; }
+// Costo del mes sin el arreglo descontado: se usa para comparar meses entre si,
+// asi un descuento puntual no aparece como baja/suba del costo.
+function alBruto(r) { return r.total + (r.descuento || 0); }
+
+function cargarAlquiler() {
+  google.script.run
+    .withSuccessHandler(function(json) {
+      AL_REGISTROS = JSON.parse(json).registros || [];
+      renderAlquiler();
+    })
+    .withFailureHandler(function(e) {
+      document.getElementById('al-hero-sub').textContent = 'No se pudo cargar';
+      mostrarMsg('al-msg-global', 'Error al cargar: ' + e.message, 'error');
+    })
+    .getAlquiler();
+}
+
+// Cambios de precio de alquiler y cochera (mes contra mes anterior cargado).
+function calcularAumentosAlquiler() {
+  var out = [];
+  ['alquiler', 'cochera'].forEach(function(campo) {
+    var ultimoCambio = null;
+    for (var i = 1; i < AL_REGISTROS.length; i++) {
+      var antes = AL_REGISTROS[i - 1][campo], ahora = AL_REGISTROS[i][campo];
+      if (antes && ahora && Math.abs(ahora - antes) >= 1) {
+        out.push({
+          mes: AL_REGISTROS[i].mes, campo: campo, antes: antes, ahora: ahora,
+          pct: alPct(antes, ahora),
+          meses: ultimoCambio ? alMesesEntre(ultimoCambio, AL_REGISTROS[i].mes) : null,
+        });
+        ultimoCambio = AL_REGISTROS[i].mes;
+      }
+    }
+  });
+  return out.sort(function(a, b) { return b.mes.localeCompare(a.mes) || a.campo.localeCompare(b.campo); });
+}
+
+function renderAlquiler() {
+  var hay = AL_REGISTROS.length > 0;
+  document.getElementById('al-vacio').style.display = hay ? 'none' : 'block';
+  document.getElementById('al-contenido').style.display = hay ? 'block' : 'none';
+  if (!hay) { document.getElementById('al-hero-sub').textContent = 'Sin datos todavía'; return; }
+
+  var totalHist = AL_REGISTROS.reduce(function(a, r) { return a + r.total; }, 0);
+  document.getElementById('al-hero-sub').textContent =
+    AL_REGISTROS.length + ' meses registrados · desde ' + alNombreMes(AL_REGISTROS[0].mes) +
+    ' · total histórico ' + fmtARS(totalHist);
+
+  var aumentos = calcularAumentosAlquiler();
+  renderAlertasAlquiler(aumentos);
+  renderKpisAlquiler(aumentos);
+  renderChipsAlquiler();
+  renderVistaAnioAlquiler();
+  renderEvolucionAlquiler();
+  renderAumentosAlquiler(aumentos);
+  renderResumenAniosAlquiler();
+  renderArreglosAlquiler();
+}
+
+function renderArreglosAlquiler() {
+  var arr = AL_REGISTROS.filter(function(r) { return r.descuento > 0; }).slice().reverse();
+  document.getElementById('al-arreglos-card').style.display = arr.length ? 'block' : 'none';
+  if (!arr.length) return;
+  var tot = arr.reduce(function(a, r) { return a + r.descuento; }, 0);
+  document.getElementById('al-arreglos-total').textContent = 'Total descontado: ' + fmtARS(tot);
+  document.getElementById('al-arreglos-body').innerHTML = arr.map(function(r) {
+    return '<tr><td><b>' + alNombreMes(r.mes) + '</b></td><td>' + alEsc(r.detalleDescuento) + '</td>' +
+      '<td class="al-num al-desc">-' + fmtARS(r.descuento) + '</td>' +
+      '<td class="al-num">' + fmtARS(r.total + r.descuento) + '</td>' +
+      '<td class="al-num"><b>' + fmtARS(r.total) + '</b></td></tr>';
+  }).join('');
+}
+
+function renderAlertasAlquiler(aumentos) {
+  var ultimo = AL_REGISTROS[AL_REGISTROS.length - 1];
+  var actual = alMesActual();
+  var regActual = AL_REGISTROS.find(function(r) { return r.mes === actual; });
+  var caja = document.getElementById('al-alerta-mes');
+  if (regActual) {
+    caja.className = 'al-alerta ok';
+    document.getElementById('al-alerta-mes-ico').textContent = '✅';
+    document.getElementById('al-alerta-mes-txt').textContent = alNombreMes(actual) + ' cargado';
+    document.getElementById('al-alerta-mes-sub').textContent = 'Total ' + fmtARS(regActual.total) +
+      (regActual.fechaPago ? ' · pagado el ' + regActual.fechaPago : '');
+  } else {
+    caja.className = 'al-alerta warn';
+    document.getElementById('al-alerta-mes-ico').textContent = '⏳';
+    document.getElementById('al-alerta-mes-txt').textContent = alNombreMes(actual) + ' pendiente';
+    var estimado = ultimo.alquiler + ultimo.cochera + ultimo.expensas;
+    document.getElementById('al-alerta-mes-sub').textContent =
+      'Último cargado: ' + alNombreMes(ultimo.mes) + ' · estimado ≈ ' + fmtARS(estimado);
+  }
+
+  // Proximo aumento: ultimo cambio del alquiler + 6 meses. La proyeccion usa
+  // el promedio de los dos ultimos aumentos del alquiler.
+  var aumAlq = aumentos.filter(function(a) { return a.campo === 'alquiler'; });
+  if (!aumAlq.length) {
+    document.getElementById('al-alerta-aum-txt').textContent = 'Sin aumentos registrados';
+    document.getElementById('al-alerta-aum-sub').textContent = '';
+    return;
+  }
+  var ult = aumAlq[0];
+  var proximo = alSumarMeses(ult.mes, AL_MESES_ENTRE_AUMENTOS);
+  var faltan = alMesesEntre(actual, proximo);
+  var ultimos = aumAlq.slice(0, 2);
+  var pctProm = ultimos.reduce(function(a, x) { return a + x.pct; }, 0) / ultimos.length;
+  var alqVigente = ultimo.alquiler;
+  var proyectado = Math.round(alqVigente * (1 + pctProm / 100) / 1000) * 1000;
+
+  document.getElementById('al-alerta-aum-txt').textContent = alNombreMes(proximo) +
+    (faltan > 0 ? ' · faltan ' + faltan + (faltan === 1 ? ' mes' : ' meses') : faltan === 0 ? ' · ¡este mes!' : ' · ya debería haber aumentado');
+  document.getElementById('al-alerta-aum-sub').textContent =
+    'Último: ' + alNombreMes(ult.mes) + ' (' + alFmtPctTexto(ult.pct) + ') · al ritmo de ' + alFmtPctTexto(pctProm) +
+    ' el alquiler quedaría en ≈ ' + fmtARS(proyectado);
+}
+
+function renderKpisAlquiler(aumentos) {
+  var n = AL_REGISTROS.length;
+  var u = AL_REGISTROS[n - 1], p = n > 1 ? AL_REGISTROS[n - 2] : null;
+  document.getElementById('al-kpi-total').textContent = fmtARS(u.total);
+  document.getElementById('al-kpi-total-sub').innerHTML = alNombreMes(u.mes) + (p ? ' · ' + alFmtPct(alPct(alBruto(p), alBruto(u))) + ' vs ' + alNombreMes(p.mes, true) : '');
+  document.getElementById('al-kpi-alquiler').textContent = fmtARS(u.alquiler);
+  document.getElementById('al-kpi-cochera').textContent = fmtARS(u.cochera);
+  document.getElementById('al-kpi-expensas').textContent = fmtARS(u.expensas);
+  document.getElementById('al-kpi-expensas-sub').innerHTML = p ? alFmtPct(alPct(p.expensas, u.expensas)) + ' vs ' + alNombreMes(p.mes, true) : '';
+  ['alquiler', 'cochera'].forEach(function(campo) {
+    var a = aumentos.find(function(x) { return x.campo === campo; });
+    document.getElementById('al-kpi-' + campo + '-sub').innerHTML = a
+      ? 'desde ' + alNombreMes(a.mes, true) + ' · ' + alFmtPct(a.pct) : 'sin cambios registrados';
+  });
+}
+
+function aniosAlquiler() {
+  var set = {};
+  AL_REGISTROS.forEach(function(r) { set[r.mes.slice(0, 4)] = true; });
+  return Object.keys(set).sort().reverse();
+}
+
+function renderChipsAlquiler() {
+  var anios = aniosAlquiler();
+  if (AL_ANIO_SEL && anios.indexOf(AL_ANIO_SEL) < 0) AL_ANIO_SEL = '';
+  document.getElementById('al-chips').innerHTML =
+    '<span style="font-size:12px;font-weight:800;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-right:4px">Ver:</span>' +
+    [''].concat(anios).map(function(a) {
+      return '<button class="al-chip' + (a === AL_ANIO_SEL ? ' active' : '') + '" onclick="seleccionarAnioAlquiler(\'' + a + '\')">' + (a || 'Todo') + '</button>';
+    }).join('');
+}
+
+function seleccionarAnioAlquiler(anio) {
+  AL_ANIO_SEL = anio;
+  renderChipsAlquiler();
+  renderVistaAnioAlquiler();
+}
+
+function registrosFiltradosAlquiler() {
+  return AL_ANIO_SEL ? AL_REGISTROS.filter(function(r) { return r.mes.indexOf(AL_ANIO_SEL) === 0; }) : AL_REGISTROS.slice();
+}
+
+function renderVistaAnioAlquiler() {
+  var regs = registrosFiltradosAlquiler();
+  var tot = { alquiler: 0, cochera: 0, expensas: 0, otros: 0, descuento: 0, total: 0 };
+  var max = null;
+  regs.forEach(function(r) {
+    Object.keys(tot).forEach(function(k) { tot[k] += r[k]; });
+    if (!max || r.total > max.total) max = r;
+  });
+  var prom = regs.length ? tot.total / regs.length : 0;
+
+  document.getElementById('al-kpi-anio-lbl').textContent = AL_ANIO_SEL ? 'Total pagado ' + AL_ANIO_SEL : 'Total pagado (todo)';
+  document.getElementById('al-kpi-anio-total').textContent = fmtARS(tot.total);
+  document.getElementById('al-kpi-anio-sub').innerHTML = regs.length + (regs.length === 1 ? ' mes' : ' meses') +
+    (tot.descuento ? ' · <span class="al-desc">-' + fmtARS(tot.descuento) + ' en arreglos</span>' : '');
+  document.getElementById('al-kpi-anio-prom').textContent = fmtARS(prom);
+  var subProm = '';
+  if (AL_ANIO_SEL) {
+    var ant = AL_REGISTROS.filter(function(r) { return r.mes.indexOf(String(parseInt(AL_ANIO_SEL, 10) - 1)) === 0; });
+    if (ant.length) {
+      var promAnt = ant.reduce(function(a, r) { return a + r.total; }, 0) / ant.length;
+      subProm = alFmtPct(alPct(promAnt, prom)) + ' vs promedio ' + (parseInt(AL_ANIO_SEL, 10) - 1);
+    }
+  }
+  document.getElementById('al-kpi-anio-prom-sub').innerHTML = subProm;
+  document.getElementById('al-kpi-anio-max').textContent = max ? fmtARS(max.total) : '–';
+  document.getElementById('al-kpi-anio-max-sub').textContent = max ? alNombreMes(max.mes) : '';
+
+  // Barras apiladas por mes
+  if (alChartMensual) alChartMensual.destroy();
+  var campos = ['alquiler', 'cochera', 'expensas'];
+  if (tot.otros) campos.push('otros');
+  var nombres = { alquiler: 'Alquiler', cochera: 'Cochera', expensas: 'Expensas', otros: 'Otros' };
+  alChartMensual = new Chart(document.getElementById('al-chart-mensual'), {
+    type: 'bar',
+    data: {
+      labels: regs.map(function(r) { return alNombreMes(r.mes, true); }),
+      datasets: campos.map(function(c) {
+        return { label: nombres[c], data: regs.map(function(r) { return r[c]; }), backgroundColor: AL_COLORES[c], borderRadius: 3, stack: 's' };
+      }).concat(tot.descuento ? [{
+        label: 'Arreglo descontado', data: regs.map(function(r) { return -r.descuento; }),
+        backgroundColor: '#27ae60', borderRadius: 3, stack: 's',
+      }] : []),
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: { mode: 'index', intersect: false, callbacks: {
+          label: function(ctx) { return ' ' + ctx.dataset.label + ': ' + fmtARS(ctx.raw); },
+          footer: function(items) { return 'Total pagado: ' + fmtARS(items.reduce(function(a, i) { return a + i.raw; }, 0)); },
+        } },
+      },
+      scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, ticks: { callback: alTicksK } } },
+    },
+  });
+
+  // Composicion
+  if (alChartSplit) alChartSplit.destroy();
+  alChartSplit = new Chart(document.getElementById('al-chart-split'), {
+    type: 'doughnut',
+    data: {
+      labels: campos.map(function(c) { return nombres[c]; }),
+      datasets: [{ data: campos.map(function(c) { return tot[c]; }), backgroundColor: campos.map(function(c) { return AL_COLORES[c]; }), borderWidth: 2 }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: { callbacks: { label: function(ctx) {
+          var bruto = campos.reduce(function(a, c) { return a + tot[c]; }, 0);
+          var pct = bruto ? (ctx.raw / bruto * 100).toFixed(1).replace('.', ',') : '0';
+          return ' ' + ctx.label + ': ' + fmtARS(ctx.raw) + ' (' + pct + '%)';
+        } } },
+      },
+    },
+  });
+
+  renderDetalleAlquiler(regs);
+}
+
+function renderEvolucionAlquiler() {
+  if (alChartEvolucion) alChartEvolucion.destroy();
+  var regs = AL_REGISTROS;
+  function serie(campo, extra) {
+    return Object.assign({
+      label: { alquiler: 'Alquiler', cochera: 'Cochera', expensas: 'Expensas', total: 'Total (sin arreglos)' }[campo],
+      data: regs.map(function(r) { return campo === 'total' ? alBruto(r) : r[campo]; }),
+      borderColor: AL_COLORES[campo], backgroundColor: AL_COLORES[campo],
+      borderWidth: 2.5, pointRadius: 2, pointHoverRadius: 5, tension: 0.25,
+    }, extra || {});
+  }
+  alChartEvolucion = new Chart(document.getElementById('al-chart-evolucion'), {
+    type: 'line',
+    data: {
+      labels: regs.map(function(r) { return alNombreMes(r.mes, true); }),
+      datasets: [
+        serie('total', { borderDash: [6, 4], borderWidth: 2, pointRadius: 0 }),
+        serie('alquiler', { stepped: true, tension: 0 }),
+        serie('expensas'),
+        serie('cochera', { stepped: true, tension: 0 }),
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: function(ctx) { return ' ' + ctx.dataset.label + ': ' + fmtARS(ctx.raw); } } } },
+      scales: { x: { grid: { display: false } }, y: { ticks: { callback: alTicksK } } },
+    },
+  });
+}
+
+function renderAumentosAlquiler(aumentos) {
+  var body = document.getElementById('al-aumentos-body');
+  if (!aumentos.length) { body.innerHTML = '<tr><td colspan="6" class="no-data">Sin aumentos registrados.</td></tr>'; return; }
+  body.innerHTML = aumentos.map(function(a) {
+    return '<tr><td><b>' + alNombreMes(a.mes) + '</b></td>' +
+      '<td><span class="badge ' + (a.campo === 'alquiler' ? 'al-badge-alq' : 'al-badge-coc') + '">' + AL_LABEL[a.campo] + '</span></td>' +
+      '<td class="al-num">' + fmtARS(a.antes) + '</td>' +
+      '<td class="al-num"><b>' + fmtARS(a.ahora) + '</b></td>' +
+      '<td class="al-num">' + alFmtPct(a.pct) + '</td>' +
+      '<td class="al-num">' + (a.meses === null ? '–' : a.meses) + '</td></tr>';
+  }).join('');
+}
+
+function renderResumenAniosAlquiler() {
+  var anios = aniosAlquiler();
+  var datos = {};
+  anios.forEach(function(a) {
+    var regs = AL_REGISTROS.filter(function(r) { return r.mes.indexOf(a) === 0; });
+    var d = { n: regs.length, alquiler: 0, cochera: 0, expensas: 0, descuento: 0, total: 0 };
+    regs.forEach(function(r) { d.alquiler += r.alquiler; d.cochera += r.cochera; d.expensas += r.expensas; d.descuento += r.descuento; d.total += r.total; });
+    d.prom = d.n ? d.total / d.n : 0;
+    datos[a] = d;
+  });
+  document.getElementById('al-anios-body').innerHTML = anios.map(function(a) {
+    var d = datos[a], ant = datos[String(parseInt(a, 10) - 1)];
+    return '<tr style="cursor:pointer" onclick="seleccionarAnioAlquiler(\'' + a + '\')" title="Ver ' + a + '">' +
+      '<td><b>' + a + '</b></td><td class="al-num">' + d.n + '</td>' +
+      '<td class="al-num">' + fmtARS(d.alquiler) + '</td><td class="al-num">' + fmtARS(d.cochera) + '</td>' +
+      '<td class="al-num">' + fmtARS(d.expensas) + '</td>' +
+      '<td class="al-num">' + (d.descuento ? '<span class="al-desc">-' + fmtARS(d.descuento) + '</span>' : '<span class="pct-neu">–</span>') + '</td>' +
+      '<td class="al-num"><b>' + fmtARS(d.total) + '</b></td>' +
+      '<td class="al-num">' + fmtARS(d.prom) + '</td>' +
+      '<td class="al-num">' + (ant ? alFmtPct(alPct(ant.prom, d.prom)) : '<span class="pct-neu">–</span>') + '</td></tr>';
+  }).join('');
+}
+
+function renderDetalleAlquiler(regs) {
+  var body = document.getElementById('al-detalle-body');
+  if (!regs.length) { body.innerHTML = '<tr><td colspan="10" class="no-data">Sin meses para mostrar.</td></tr>'; return; }
+  var escritura = puede('alquiler', 'escritura');
+  var html = '', anioActual = null;
+  regs.slice().reverse().forEach(function(r) {
+    var anio = r.mes.slice(0, 4);
+    if (!AL_ANIO_SEL && anio !== anioActual) {
+      anioActual = anio;
+      html += '<tr class="al-row-anio"><td colspan="10">📅 ' + anio + '</td></tr>';
+    }
+    var idx = AL_REGISTROS.indexOf(r);
+    var prev = idx > 0 ? AL_REGISTROS[idx - 1] : null;
+    var subioAlq = prev && prev.alquiler && Math.abs(r.alquiler - prev.alquiler) >= 1;
+    var subioCoc = prev && prev.cochera && Math.abs(r.cochera - prev.cochera) >= 1;
+    var notas = [];
+    if (subioAlq || subioCoc) notas.push('<span class="badge al-badge-up">⬆ aumento</span>');
+    if (r.descuento) notas.push('<span class="badge al-badge-arr">🔧 ' + alEsc(r.detalleDescuento || 'Arreglo') + '</span>');
+    if (r.otros && r.detalleOtros) notas.push(alEsc(r.detalleOtros));
+    if (r.notas) notas.push(alEsc(r.notas));
+    if (r.fechaPago) notas.push('<span style="color:#999">pagado ' + alEsc(r.fechaPago) + '</span>');
+    html += '<tr' + (subioAlq || subioCoc ? ' class="al-row-aumento"' : '') + '>' +
+      '<td><b>' + alNombreMes(r.mes) + '</b></td>' +
+      '<td class="al-num"' + (subioAlq ? ' style="color:#2980b9;font-weight:800"' : '') + '>' + fmtARS(r.alquiler) + '</td>' +
+      '<td class="al-num"' + (subioCoc ? ' style="color:#8e44ad;font-weight:800"' : '') + '>' + fmtARS(r.cochera) + '</td>' +
+      '<td class="al-num">' + fmtARS(r.expensas) + '</td>' +
+      '<td class="al-num">' + (r.otros ? fmtARS(r.otros) : '<span class="pct-neu">–</span>') + '</td>' +
+      '<td class="al-num">' + (r.descuento ? '<span class="al-desc">-' + fmtARS(r.descuento) + '</span>' : '<span class="pct-neu">–</span>') + '</td>' +
+      '<td class="al-num"><b>' + fmtARS(r.total) + '</b></td>' +
+      '<td class="al-num">' + (prev ? alFmtPct(alPct(alBruto(prev), alBruto(r))) : '<span class="pct-neu">–</span>') + '</td>' +
+      '<td style="white-space:normal;max-width:320px;font-size:12px">' + notas.join(' · ') + '</td>' +
+      (escritura
+        ? '<td class="al-solo-escritura" style="white-space:nowrap">' +
+            '<button class="btn btn-gray al-acc" onclick="editarRegistroAlquiler(' + r.fila + ')" title="Editar">✏️</button> ' +
+            '<button class="btn btn-gray al-acc" onclick="eliminarRegistroAlquiler(' + r.fila + ')" title="Eliminar">🗑️</button></td>'
+        : '<td class="al-solo-escritura"></td>') +
+      '</tr>';
+  });
+  body.innerHTML = html;
+}
+
+// ── Alta / edicion ───────────────────────────────────────────
+function abrirFormAlquiler(reg) {
+  AL_EDIT_FILA = reg ? reg.fila : null;
+  var ultimo = AL_REGISTROS[AL_REGISTROS.length - 1];
+  var base = reg || {
+    mes: ultimo ? alSumarMeses(ultimo.mes, 1) : alMesActual(),
+    alquiler: ultimo ? ultimo.alquiler : '', cochera: ultimo ? ultimo.cochera : '',
+    expensas: '', otros: '', detalleOtros: '', descuento: '', detalleDescuento: '', fechaPago: '', notas: '',
+  };
+  document.getElementById('al-form-titulo').textContent = reg ? '✏️ Editar ' + alNombreMes(reg.mes) : '➕ Cargar mes';
+  document.getElementById('al-f-mes').value = base.mes;
+  document.getElementById('al-f-alquiler').value = base.alquiler;
+  document.getElementById('al-f-cochera').value = base.cochera;
+  document.getElementById('al-f-expensas').value = base.expensas;
+  document.getElementById('al-f-otros').value = base.otros || '';
+  document.getElementById('al-f-detalle').value = base.detalleOtros || '';
+  document.getElementById('al-f-descuento').value = base.descuento || '';
+  document.getElementById('al-f-detalle-desc').value = base.detalleDescuento || '';
+  document.getElementById('al-f-fechapago').value = fechaDDMMYYYYaISO(base.fechaPago);
+  document.getElementById('al-f-notas').value = base.notas || '';
+  document.getElementById('al-form-msg').className = 'msg';
+  actualizarTotalFormAlquiler();
+  var card = document.getElementById('al-form-card');
+  card.style.display = 'block';
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById(reg ? 'al-f-alquiler' : 'al-f-expensas').focus();
+}
+
+function cerrarFormAlquiler() {
+  AL_EDIT_FILA = null;
+  document.getElementById('al-form-card').style.display = 'none';
+}
+
+function actualizarTotalFormAlquiler() {
+  var t = ['al-f-alquiler', 'al-f-cochera', 'al-f-expensas', 'al-f-otros'].reduce(function(a, id) {
+    return a + (parseFloat(document.getElementById(id).value) || 0);
+  }, 0) - Math.abs(parseFloat(document.getElementById('al-f-descuento').value) || 0);
+  document.getElementById('al-f-total').textContent = fmtARS(t);
+}
+
+function guardarFormAlquiler() {
+  var data = {
+    fila: AL_EDIT_FILA,
+    mes: document.getElementById('al-f-mes').value,
+    alquiler: parseFloat(document.getElementById('al-f-alquiler').value) || 0,
+    cochera: parseFloat(document.getElementById('al-f-cochera').value) || 0,
+    expensas: parseFloat(document.getElementById('al-f-expensas').value) || 0,
+    otros: parseFloat(document.getElementById('al-f-otros').value) || 0,
+    detalleOtros: document.getElementById('al-f-detalle').value,
+    descuento: Math.abs(parseFloat(document.getElementById('al-f-descuento').value) || 0),
+    detalleDescuento: document.getElementById('al-f-detalle-desc').value,
+    fechaPago: fechaISOaDDMMYYYY(document.getElementById('al-f-fechapago').value),
+    notas: document.getElementById('al-f-notas').value,
+  };
+  if (!data.mes) { mostrarMsg('al-form-msg', 'Elegí el mes.', 'error'); return; }
+  if (data.descuento && !data.detalleDescuento.trim()) { mostrarMsg('al-form-msg', 'Poné el detalle del arreglo descontado.', 'error'); return; }
+  var btn = document.getElementById('al-btn-guardar'), sp = document.getElementById('al-sp-guardar');
+  btn.disabled = true; sp.classList.add('show');
+  var fin = function() { btn.disabled = false; sp.classList.remove('show'); };
+  var runner = google.script.run
+    .withSuccessHandler(function(json) {
+      fin();
+      var r = JSON.parse(json);
+      if (!r.ok) { mostrarMsg('al-form-msg', r.msg || 'No se pudo guardar', 'error'); return; }
+      var editando = !!AL_EDIT_FILA;
+      cerrarFormAlquiler();
+      mostrarMsg('al-msg-global', (editando ? '✅ Se actualizó ' : '✅ Se cargó ') + alNombreMes(data.mes) + '.', 'ok');
+      cargarAlquiler();
+    })
+    .withFailureHandler(function(e) { fin(); mostrarMsg('al-form-msg', 'Error: ' + e.message, 'error'); });
+  if (AL_EDIT_FILA) runner.editarAlquiler(JSON.stringify(data));
+  else runner.agregarAlquiler(JSON.stringify(data));
+}
+
+function editarRegistroAlquiler(fila) {
+  var r = AL_REGISTROS.find(function(x) { return x.fila === fila; });
+  if (r) abrirFormAlquiler(r);
+}
+
+function eliminarRegistroAlquiler(fila) {
+  var r = AL_REGISTROS.find(function(x) { return x.fila === fila; });
+  if (!r || !confirm('¿Eliminar ' + alNombreMes(r.mes) + ' (' + fmtARS(r.total) + ')?')) return;
+  google.script.run
+    .withSuccessHandler(function() { mostrarMsg('al-msg-global', '🗑️ Se eliminó ' + alNombreMes(r.mes) + '.', 'info'); cargarAlquiler(); })
+    .withFailureHandler(function(e) { alert('Error al eliminar: ' + e.message); })
+    .eliminarAlquiler(fila);
+}
+
+function importarHistoricoAlquiler() {
+  if (!confirm('Se van a leer las pestañas por año de la planilla (2023, 2024, ...) y agregar a la hoja BD los meses que todavía no estén. ¿Seguir?')) return;
+  var btn = document.getElementById('al-btn-importar'), sp = document.getElementById('al-sp-importar');
+  btn.disabled = true; sp.classList.add('show');
+  google.script.run
+    .withSuccessHandler(function(json) {
+      btn.disabled = false; sp.classList.remove('show');
+      var r = JSON.parse(json);
+      if (!r.ok) { mostrarMsg('al-msg-global', r.msg || 'No se pudo importar', 'error'); return; }
+      mostrarMsg('al-msg-global',
+        '📥 Pestañas leídas: ' + (r.pestanas || []).join(', ') + ' · ' + r.importados + ' meses importados' +
+        (r.omitidos ? ' · ' + r.omitidos + ' ya estaban cargados' : ''), 'ok');
+      cargarAlquiler();
+    })
+    .withFailureHandler(function(e) {
+      btn.disabled = false; sp.classList.remove('show');
+      mostrarMsg('al-msg-global', 'Error al importar: ' + e.message, 'error');
+    })
+    .importarHistoricoAlquiler();
 }
 </script>
 </body>
